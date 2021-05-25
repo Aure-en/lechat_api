@@ -3,13 +3,12 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-require('dotenv').config({ path: path.resolve(__dirname, '.env.local') });
-require('./auth/passport');
-require('./mongo');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+require('../auth/passport');
 
-const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
-const authRouter = require('./routes/auth');
+const indexRouter = require('../routes/index');
+const usersRouter = require('../routes/users');
+const authRouter = require('../routes/auth');
 
 const app = express();
 
