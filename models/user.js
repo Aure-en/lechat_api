@@ -14,8 +14,13 @@ const UserSchema = new Schema(
       data: Buffer,
       contentType: String,
     },
+    server: [{ type: Schema.Types.ObjectId, ref: 'Server' }],
     created: Date,
   },
 );
+
+UserSchema.virtual('url').get(function () {
+  return `/users/${this._id}`;
+});
 
 module.exports = mongoose.model('User', UserSchema);
