@@ -6,7 +6,10 @@ const User = require('../models/user');
 
 // POST Login
 exports.auth_login_post = [
-  body('email').trim().isLength({ min: 1 }).withMessage('Email must be specified')
+  body('email')
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Email must be specified')
     .isEmail()
     .withMessage('Invalid email.'),
   body('password', 'Password must be specified').trim().isLength({ min: 1 }),
@@ -22,12 +25,14 @@ exports.auth_login_post = [
       if (err) return next(err);
       if (!user) {
         return res.json({
-          errors: [{
-            value: '',
-            param: 'response',
-            location: 'body',
-            msg: info.message,
-          }],
+          errors: [
+            {
+              value: '',
+              param: 'response',
+              location: 'body',
+              msg: info.message,
+            },
+          ],
         });
       }
       req.login(user, { session: false }, (err) => {
@@ -42,7 +47,10 @@ exports.auth_login_post = [
 
 exports.auth_signup_post = [
   body('username', 'Username must be specified').trim().isLength({ min: 1 }),
-  body('email').trim().isLength({ min: 1 }).withMessage('Email must be specified')
+  body('email')
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Email must be specified')
     .isEmail()
     .withMessage('Invalid email.'),
   body('password', 'Password must be specified').trim().isLength({ min: 1 }),

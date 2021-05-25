@@ -1,5 +1,6 @@
 const async = require('async');
 const { body, validationResult } = require('express-validator');
+const passport = require('passport');
 const Server = require('../models/server');
 const User = require('../models/user');
 const Message = require('../models/message');
@@ -15,7 +16,7 @@ exports.server_list = function (req, res, next) {
 
 // Detail of a specific server (GET)
 exports.server_detail = function (req, res, next) {
-  Server.find({ _id: req.params.serverId }).exec((err, server) => {
+  Server.findOne({ _id: req.params.serverId }).exec((err, server) => {
     if (err) return next(err);
     if (!server) return res.json({ error: 'Server not found' });
     return res.json(server);
@@ -39,7 +40,11 @@ exports.server_create = [
 
   // Form is valid. Save the server.
   (req, res, next) => {
-    const server = new Server({ name: req.body.name });
+    const server = new Server({
+      name: req.body.name,
+      admin: req.user._id,
+      timestamp: new Date(),
+    });
     server.save((err) => {
       if (err) return next(err);
       return res.redirect(303, server.url);
@@ -64,42 +69,64 @@ exports.server_update = [
 
   // Form is valid. Save the server.
   (req, res, next) => {
-    Server.findByIdAndUpdate(req.params.serverId, { name: req.body.name }, {}, (err, server) => {
-      if (err) return next(err);
-      res.redirect(303, server.url);
-    });
+    Server.findByIdAndUpdate(
+      req.params.serverId,
+      { name: req.body.name },
+      {},
+      (err, server) => {
+        if (err) return next(err);
+        res.redirect(303, server.url);
+      },
+    );
   },
 ];
 
 // Delete a server (DELETE)
 exports.server_delete = function (req, res, next) {
-  async.parallel([
-    // Delete the server messages
-    function (callback) {
-      Message.deleteMany({ server: req.params.serverId }).exec(callback);
-    },
+  async.parallel(
+    [
+      // Delete the server messages
+      function (callback) {
+        Message.deleteMany({ server: req.params.serverId }).exec(callback);
+      },
 
-    // Delete the server channels
-    function (callback) {
-      Channel.deleteMany({ server: req.params.serverId }).exec(callback);
-    },
+      // Delete the server channels
+      function (callback) {
+        Channel.deleteMany({ server: req.params.serverId }).exec(callback);
+      },
 
-    // Delete the server from the users servers list.
-    function (callback) {
-      User.updateMany(
-        { server: req.params.serverId },
-        { $pull: { server: req.params.serverId } },
-      ).exec(callback);
-    },
+      // Delete the server from the users servers list.
+      function (callback) {
+        User.updateMany(
+          { server: req.params.serverId },
+          { $pull: { server: req.params.serverId } },
+        ).exec(callback);
+      },
 
-    // Delete the server itself
-    function (callback) {
-      Server.findByIdAndDelete(req.params.serverId).exec(callback);
+      // Delete the server itself
+      function (callback) {
+        Server.findByIdAndDelete(req.params.serverId).exec(callback);
+      },
+    ],
+    (err) => {
+      if (err) return next(err);
+      res.redirect(303, '/servers');
     },
-  ], (err) => {
+  );
+};
+
+// Check that the user is logged in
+exports.check_user = function (req, res, next) {
+  passport.authenticate('jwt', { session: false }, (err, user) => {
     if (err) return next(err);
-    res.redirect(303, '/servers');
-  });
+    if (!user) {
+      return res
+        .status(403)
+        .json({ error: 'Only registered users may perform this action.' });
+    }
+    req.user = user;
+    next();
+  })(req, res, next);
 };
 
 // Check that the user is the administrator (only them can delete the server).
@@ -108,7 +135,9 @@ exports.check_admin = function (req, res, next) {
     if (err) return next(err);
     if (!server) return res.json({ error: 'Server not found. ' });
     if (req.user._id !== server.admin.toString()) {
-      return res.status(403).json({ error: 'Only the administrator can delete the server. ' });
+      return res
+        .status(403)
+        .json({ error: 'Only the administrator can delete the server. ' });
     }
     next();
   });
