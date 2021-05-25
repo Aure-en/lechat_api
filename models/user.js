@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
@@ -16,12 +16,12 @@ const UserSchema = new Schema({
     data: Buffer,
     contentType: String,
   },
-  server: [{ type: Schema.Types.ObjectId, ref: "Server" }],
+  server: [{ type: Schema.Types.ObjectId, ref: 'Server' }],
   timestamp: Date,
 });
 
-UserSchema.virtual("url").get(function () {
+UserSchema.virtual('url').get(function () {
   return `/users/${this._id}`;
 });
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model('User', UserSchema);

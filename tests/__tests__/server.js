@@ -12,7 +12,7 @@ beforeAll(async (done) => {
   async.parallel(
     [
       // Create server admin and get its JWT
-      async function (callback) {
+      async function () {
         const adminRes = await request(app).post('/auth/signup').send({
           username: 'Admin',
           email: 'admin@user.com',
@@ -22,7 +22,7 @@ beforeAll(async (done) => {
       },
 
       // Create a random user and get its JWT
-      async function (callback) {
+      async function () {
         const userRes = await request(app).post('/auth/signup').send({
           username: 'User',
           email: 'user@user.com',
