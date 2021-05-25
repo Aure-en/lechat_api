@@ -9,6 +9,12 @@ const UserSchema = new Schema(
     email: {
       type: String, required: true, trim: true, lowercase: true,
     },
+    avatar: {
+      name: String,
+      data: Buffer,
+      contentType: String,
+    },
+    created: Date,
   },
 );
 

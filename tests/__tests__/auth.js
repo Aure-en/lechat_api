@@ -48,6 +48,12 @@ describe('Log in', () => {
     done();
   });
 
+  test('Error is sent if user does not exist', async (done) => {
+    const res = await request(app).post('/auth/login').send({ email: 'Unknown@user.com', password: 'Unknown' });
+    expect(res.body.errors.filter((error) => error.msg.match(/incorrect email/i)).length).toBe(1);
+    done();
+  });
+
   test('User can login if all required fields are filled', async (done) => {
     const res = await request(app)
       .post('/auth/login')
