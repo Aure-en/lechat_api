@@ -13,10 +13,10 @@ exports.category_list = function (req, res, next) {
 
 // Detail of a specific category (GET)
 exports.category_detail = function (req, res, next) {
-  Category.findOne({ id: req.params.categoryId }).exec((err, category) => {
+  Category.findOne({ _id: req.params.categoryId }).exec((err, category) => {
     if (err) return next(err);
     if (!category) {
-      return res.json({ error: 'Category not found. ' });
+      return res.json({ error: 'Category not found.' });
     }
     return res.json(category);
   });
@@ -101,7 +101,7 @@ exports.category_delete = function (req, res, next) {
       return res.json({ error: 'Categories containing channels cannot be deleted.' });
     }
     // If it has no channels, delete it.
-    Category.findByIdAndRemove(req.body.categoryId, (err) => {
+    Category.findByIdAndRemove(req.params.categoryId, (err) => {
       if (err) return next(err);
       res.redirect(303, `/servers/${req.params.serverId}/categories`);
     });

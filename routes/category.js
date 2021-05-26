@@ -1,7 +1,7 @@
 const express = require('express');
 const checkAuth = require('../auth/checkAuth');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true }); // mergeParams is necessary to get serverId.
 const categoryController = require('../controllers/categoryController');
 
 // GET all categories of the server
