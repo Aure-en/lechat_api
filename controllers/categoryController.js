@@ -101,9 +101,9 @@ exports.category_delete = function (req, res, next) {
       return res.json({ error: 'Categories containing channels cannot be deleted.' });
     }
     // If it has no channels, delete it.
-    Category.findByIdAndRemove(req.params.categoryId, (err) => {
+    Category.findByIdAndRemove(req.params.categoryId, (err, category) => {
       if (err) return next(err);
-      res.redirect(303, `/servers/${req.params.serverId}/categories`);
+      res.redirect(303, `/servers/${category._id}/categories`);
     });
   });
 };

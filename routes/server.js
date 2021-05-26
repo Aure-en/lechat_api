@@ -3,8 +3,7 @@ const checkAuth = require('../auth/checkAuth');
 
 const router = express.Router();
 const serverController = require('../controllers/serverController');
-const categoryRouter = require('./category');
-const channelRouter = require('./channel');
+const categoryController = require('../controllers/categoryController');
 
 // GET all servers
 router.get('/', serverController.server_list);
@@ -35,10 +34,15 @@ router.delete(
 // GET a specific server
 router.get('/:serverId', serverController.server_detail);
 
-// Requests for categories
-router.use('/:serverId/categories', categoryRouter);
+// POST to create a new category
+router.post(
+  '/:serverId/categories',
+  checkAuth.check_user,
+  checkAuth.check_admin,
+  categoryController.category_create,
+);
 
-// Request for channels
-router.use('/:serverId/channels', channelRouter);
+// GET to get the server categories
+router.get('/:serverId/categories', categoryController.category_list);
 
 module.exports = router;

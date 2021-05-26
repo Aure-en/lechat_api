@@ -10,7 +10,7 @@ const ChannelSchema = new Schema({
 });
 
 ChannelSchema.virtual('url').get(function () {
-  return `/servers/${this.server}/channels/${this._id}`;
+  return `/channels/${this._id}`;
 });
 
 module.exports = mongoose.model('Channel', ChannelSchema);

@@ -104,7 +104,7 @@ describe('Update', () => {
 
   test('Anonymous users cannot update a category', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}/categories/${category._id}`)
+      .put(`/categories/${category._id}`)
       .send({ name: 'Renamed' });
     expect(res.status).toBe(401); // Unauthorized
     done();
@@ -112,7 +112,7 @@ describe('Update', () => {
 
   test('Random server members cannot update a category', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}/categories/${category._id}`)
+      .put(`/categories/${category._id}`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ describe('Update', () => {
 
   test('Users who are allowed to can change the category name', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}/categories/${category._id}`)
+      .put(`/categories/${category._id}`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
@@ -155,14 +155,14 @@ describe('Delete', () => {
 
   test('Anonymous users cannot delete a category', async (done) => {
     const res = await request(app)
-      .delete(`/servers/${server._id}/categories/${category._id}`);
+      .delete(`/categories/${category._id}`);
     expect(res.status).toBe(401); // Unauthorized
     done();
   });
 
   test('Random server members cannot delete a category', async (done) => {
     const res = await request(app)
-      .delete(`/servers/${server._id}/categories/${category._id}`)
+      .delete(`/categories/${category._id}`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ describe('Delete', () => {
 
   test('Users who are allowed to can delete the category', async (done) => {
     const res = await request(app)
-      .delete(`/servers/${server._id}/categories/${category._id}`)
+      .delete(`/categories/${category._id}`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
