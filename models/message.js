@@ -11,4 +11,8 @@ const MessageSchema = new Schema({
   edited: { type: Boolean, default: false },
 });
 
+MessageSchema.virtual('url').get(function () {
+  return `/messages/${this._id}`;
+});
+
 module.exports = mongoose.model('Message', MessageSchema);

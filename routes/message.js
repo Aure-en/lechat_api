@@ -1,4 +1,5 @@
 const express = require('express');
+const checkAuth = require('../auth/checkAuth');
 const messageController = require('../controllers/messageController');
 
 const router = express.Router({ mergeParams: true });
@@ -7,9 +8,22 @@ const router = express.Router({ mergeParams: true });
 router.get('/:messageId', messageController.message_detail);
 
 // PUT to update a message
-router.put('/:messageId', messageController.message_update);
+router.put(
+  '/:messageId',
+  checkAuth.check_user,
+  checkAuth.check_author,
+  checkAuth.check_permission,
+  messageController.message_update,
+);
 
 // DELETE a message
-router.delete('/:message', messageController.message_delete);
+router.delete(
+  '/:messageId',
+  checkAuth.check_user,
+  checkAuth.check_author,
+  checkAuth.check_admin,
+  checkAuth.check_permission,
+  messageController.message_delete,
+);
 
 module.exports = router;

@@ -47,7 +47,7 @@ exports.message_create = function (req, res, next) {
 exports.message_update = function (req, res, next) {
   Message.findByIdAndUpdate(
     req.params.messageId,
-    { text: req.body.text },
+    { text: req.body.text, edited: true },
     {},
     (err, message) => {
       if (err) return next(err);

@@ -20,6 +20,9 @@ exports.check_user = function (req, res, next) {
 
 // Check that the user is the administrator (only them can delete the server).
 exports.check_admin = function (req, res, next) {
+  // If the user already has permission, no need to check.
+  if (res.locals.isAllowed) return next();
+
   switch (req.baseUrl) {
     case '/servers':
       Server.findById(req.params.serverId).exec((err, server) => {
@@ -58,13 +61,27 @@ exports.check_admin = function (req, res, next) {
         });
       break;
 
+    case '/messages':
+      Message.findById(req.params.messageId)
+        .populate('server')
+        .exec((err, message) => {
+          if (err) return next(err);
+          if (!message) return res.json({ error: 'Message not found.' });
+          if (req.user._id === message.server.admin.toString()) {
+            res.locals.isAllowed = true;
+          }
+          next();
+        });
+      break;
     default:
-      next();
+      return next();
   }
 };
 
 // Check if the user is the message author
 exports.check_author = function (req, res, next) {
+  // If the user already has permission, no need to check.
+  if (res.locals.isAllowed) return next();
   Message.findById(req.params.messageId).exec((err, message) => {
     if (err) return next(err);
     if (!message) {
@@ -73,7 +90,7 @@ exports.check_author = function (req, res, next) {
     if (req.user._id === message.author.toString()) {
       res.locals.isAllowed = true;
     }
-    next();
+    return next();
   });
 };
 
@@ -85,5 +102,5 @@ exports.check_permission = function (req, res, next) {
         error: 'You do not have the permission to perform this operation.',
       });
   }
-  next();
+  return next();
 };

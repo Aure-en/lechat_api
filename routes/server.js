@@ -62,6 +62,7 @@ router.post(
 // POST to create a new message
 router.post(
   '/:serverId/channels/:channelId/messages',
+  checkAuth.check_user,
   messageController.message_create,
 );
 
