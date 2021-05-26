@@ -1,5 +1,5 @@
 const { body, validationResult } = require('express-validator');
-const Category = require('../models/channel');
+const Category = require('../models/category');
 const Channel = require('../models/channel');
 
 // List all channels of a category (GET)
@@ -41,6 +41,7 @@ exports.channel_create = [
       if (err) return next(err);
       if (!category) return res.json({ error: 'Category not found.' });
       res.locals.serverId = category.server;
+      next();
     });
   },
 
@@ -49,11 +50,11 @@ exports.channel_create = [
     const channel = new Channel({
       name: req.body.name,
       category: req.params.categoryId,
-      server: req.locals.serverId,
+      server: res.locals.serverId,
       timestamp: new Date(),
     });
 
-    Channel.save((err) => {
+    channel.save((err) => {
       if (err) return next(err);
       return res.redirect(303, channel.url);
     });
@@ -90,8 +91,8 @@ exports.channel_update = [
 
 // Delete a channel (DELETE)
 exports.channel_delete = function (req, res, next) {
-  Channel.findByIdAndRemove(req.body.channelId, (err, channel) => {
+  Channel.findByIdAndRemove(req.params.channelId, (err, channel) => {
     if (err) return next(err);
-    res.redirect(`/categories/${channel.category}`);
+    res.redirect(`/categories/${channel.category}/channels`);
   });
 };

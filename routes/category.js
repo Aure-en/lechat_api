@@ -1,9 +1,9 @@
 const express = require('express');
 const checkAuth = require('../auth/checkAuth');
-
-const router = express.Router({ mergeParams: true }); // mergeParams is necessary to get serverId.
 const categoryController = require('../controllers/categoryController');
 const channelController = require('../controllers/channelController');
+
+const router = express.Router({ mergeParams: true }); // mergeParams is necessary to get serverId.
 
 // PUT to update a category
 router.put(
@@ -28,7 +28,10 @@ router.get(
 
 // POST to create a channel in a category
 router.post(
-  '/:categoryId/channels', channelController.channel_create,
+  '/:categoryId/channels',
+  checkAuth.check_user,
+  checkAuth.check_admin,
+  channelController.channel_create,
 );
 
 // GET to get all the channels in a category

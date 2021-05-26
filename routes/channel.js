@@ -6,7 +6,7 @@ const router = express.Router({ mergeParams: true });
 
 // GET a specific channel
 router.get(
-  '/:channelId', channelController.category_detail,
+  '/:channelId', channelController.channel_detail,
 );
 
 // PUT to update a channel
@@ -14,7 +14,7 @@ router.put(
   '/:channelId',
   checkAuth.check_user,
   checkAuth.check_admin,
-  channelController.category_update,
+  channelController.channel_update,
 );
 
 // DELETE a channel
@@ -22,7 +22,7 @@ router.delete(
   '/:channelId',
   checkAuth.check_user,
   checkAuth.check_admin,
-  channelController.category_delete,
+  channelController.channel_delete,
 );
 
 module.exports = router;

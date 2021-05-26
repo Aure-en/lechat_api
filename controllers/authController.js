@@ -17,8 +17,7 @@ exports.auth_login_post = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      res.json(errors);
-      return;
+      return res.json(errors);
     }
 
     passport.authenticate('local', { session: false }, (err, user, info) => {
