@@ -10,6 +10,7 @@ router.put(
   '/:categoryId',
   checkAuth.check_user,
   checkAuth.check_admin,
+  checkAuth.check_permission,
   categoryController.category_update,
 );
 
@@ -18,6 +19,7 @@ router.delete(
   '/:categoryId',
   checkAuth.check_user,
   checkAuth.check_admin,
+  checkAuth.check_permission,
   categoryController.category_delete,
 );
 

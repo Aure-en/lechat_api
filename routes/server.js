@@ -5,6 +5,7 @@ const router = express.Router();
 const serverController = require('../controllers/serverController');
 const categoryController = require('../controllers/categoryController');
 const channelController = require('../controllers/channelController');
+const messageController = require('../controllers/messageController');
 
 // GET all servers
 router.get('/', serverController.server_list);
@@ -21,6 +22,7 @@ router.put(
   '/:serverId',
   checkAuth.check_user,
   checkAuth.check_admin,
+  checkAuth.check_permission,
   serverController.server_update,
 );
 
@@ -29,6 +31,7 @@ router.delete(
   '/:serverId',
   checkAuth.check_user,
   checkAuth.check_admin,
+  checkAuth.check_permission,
   serverController.server_delete,
 );
 
@@ -40,6 +43,7 @@ router.post(
   '/:serverId/categories',
   checkAuth.check_user,
   checkAuth.check_admin,
+  checkAuth.check_permission,
   categoryController.category_create,
 );
 
@@ -51,7 +55,14 @@ router.post(
   '/:serverId/categories/:categoryId/channels',
   checkAuth.check_user,
   checkAuth.check_admin,
+  checkAuth.check_permission,
   channelController.channel_create,
+);
+
+// POST to create a new message
+router.post(
+  '/:serverId/channels/:channelId/messages',
+  messageController.message_create,
 );
 
 module.exports = router;

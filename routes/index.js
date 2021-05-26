@@ -3,6 +3,7 @@ const authRouter = require('./auth');
 const serverRouter = require('./server');
 const categoryRouter = require('./category');
 const channelRouter = require('./channel');
+const messageRouter = require('./message');
 
 const router = express.Router();
 
@@ -15,5 +16,6 @@ router.use('/auth', authRouter);
 router.use('/servers', serverRouter);
 router.use('/categories', categoryRouter);
 router.use('/channels', channelRouter);
+router.use('/messages', messageRouter);
 
 module.exports = router;

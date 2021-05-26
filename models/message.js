@@ -8,7 +8,7 @@ const MessageSchema = new Schema({
   timestamp: { type: Date, required: true },
   server: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
   channel: { type: Schema.Types.ObjectId, ref: 'Channel', required: true },
-  edited: Boolean,
+  edited: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model('Message', MessageSchema);

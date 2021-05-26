@@ -57,7 +57,6 @@ exports.channel_update = [
   body('category', 'Category must be speficied.').trim().isLength({ min: 1 }).escape(),
 
   (req, res, next) => {
-    console.log("TESTTESTTESTTESTTESTTEST");
     // check for errors
     const errors = validationResult(req);
     // There are errors. Send them.
