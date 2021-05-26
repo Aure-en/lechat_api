@@ -22,14 +22,6 @@ exports.category_detail = function (req, res, next) {
   });
 };
 
-// List all channels in this category (GET)
-exports.category_channels = function (req, res, next) {
-  Channel.find({ category: req.params.categoryId }).exec((err, channels) => {
-    if (err) return next(err);
-    return res.json(channels);
-  });
-};
-
 // Create a category (POST)
 exports.category_create = [
   // Validation
