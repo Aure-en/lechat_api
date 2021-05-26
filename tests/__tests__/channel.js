@@ -55,7 +55,7 @@ afterAll(async () => dbDisconnect());
 describe('Creation', () => {
   test('Anonymous users cannot create a channel', async (done) => {
     const res = await request(app)
-      .post(`/categories/${category._id}/channels`)
+      .post(`/servers/${server._id}/categories/${category._id}/channels`)
       .send({ name: 'Channel' });
     expect(res.status).toBe(401); // Unauthorized
     done();
@@ -63,7 +63,7 @@ describe('Creation', () => {
 
   test('Random server members cannot create a channel', async (done) => {
     const res = await request(app)
-      .post(`/categories/${category._id}/channels`)
+      .post(`/servers/${server._id}/categories/${category._id}/channels`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ describe('Creation', () => {
 
   test('Users who are allowed to create a channel can make one', async (done) => {
     const res = await request(app)
-      .post(`/categories/${category._id}/channels`)
+      .post(`/servers/${server._id}/categories/${category._id}/channels`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ describe('Update', () => {
 
   beforeAll(async (done) => {
     const res = await request(app)
-      .post(`/categories/${category._id}/channels`)
+      .post(`/servers/${server._id}/categories/${category._id}/channels`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ describe('Update', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ name: 'Renamed' });
+      .send({ name: 'Renamed', category: channel.category });
     expect(res.status).toBe(403); // Unauthorized
     done();
   });
@@ -144,7 +144,7 @@ describe('Delete', () => {
 
   beforeAll(async (done) => {
     const res = await request(app)
-      .post(`/categories/${category._id}/channels`)
+      .post(`/servers/${server._id}/categories/${category._id}/channels`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',

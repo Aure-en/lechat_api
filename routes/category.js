@@ -26,14 +26,6 @@ router.get(
   '/:categoryId', categoryController.category_detail,
 );
 
-// POST to create a channel in a category
-router.post(
-  '/:categoryId/channels',
-  checkAuth.check_user,
-  checkAuth.check_admin,
-  channelController.channel_create,
-);
-
 // GET to get all the channels in a category
 router.get(
   '/:categoryId/channels',

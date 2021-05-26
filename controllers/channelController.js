@@ -1,5 +1,4 @@
 const { body, validationResult } = require('express-validator');
-const Category = require('../models/category');
 const Channel = require('../models/channel');
 
 // List all channels of a category (GET)
@@ -36,21 +35,11 @@ exports.channel_create = [
   },
 
   (req, res, next) => {
-    // Get the server id from the category details
-    Category.findById(req.params.categoryId).exec((err, category) => {
-      if (err) return next(err);
-      if (!category) return res.json({ error: 'Category not found.' });
-      res.locals.serverId = category.server;
-      next();
-    });
-  },
-
-  (req, res, next) => {
     // There are no errors. Save the category.
     const channel = new Channel({
       name: req.body.name,
       category: req.params.categoryId,
-      server: res.locals.serverId,
+      server: req.params.serverId,
       timestamp: new Date(),
     });
 
@@ -68,6 +57,7 @@ exports.channel_update = [
   body('category', 'Category must be speficied.').trim().isLength({ min: 1 }).escape(),
 
   (req, res, next) => {
+    console.log("TESTTESTTESTTESTTESTTEST");
     // check for errors
     const errors = validationResult(req);
     // There are errors. Send them.

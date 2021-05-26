@@ -4,6 +4,7 @@ const checkAuth = require('../auth/checkAuth');
 const router = express.Router();
 const serverController = require('../controllers/serverController');
 const categoryController = require('../controllers/categoryController');
+const channelController = require('../controllers/channelController');
 
 // GET all servers
 router.get('/', serverController.server_list);
@@ -44,5 +45,13 @@ router.post(
 
 // GET to get the server categories
 router.get('/:serverId/categories', categoryController.category_list);
+
+// POST to create a channel in a category
+router.post(
+  '/:serverId/categories/:categoryId/channels',
+  checkAuth.check_user,
+  checkAuth.check_admin,
+  channelController.channel_create,
+);
 
 module.exports = router;
