@@ -7,6 +7,7 @@ const ServerSchema = new Schema({
   timestamp: { type: Date, required: true },
   admin: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   category: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
+  channel: [{ type: Schema.Types.ObjectId, ref: 'Channel' }],
   icon: {
     name: String,
     data: Buffer,

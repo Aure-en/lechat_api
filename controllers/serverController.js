@@ -1,6 +1,5 @@
 const async = require('async');
 const { body, validationResult } = require('express-validator');
-const passport = require('passport');
 const Server = require('../models/server');
 const User = require('../models/user');
 const Message = require('../models/message');
@@ -113,32 +112,4 @@ exports.server_delete = function (req, res, next) {
       res.redirect(303, '/servers');
     },
   );
-};
-
-// Check that the user is logged in
-exports.check_user = function (req, res, next) {
-  passport.authenticate('jwt', { session: false }, (err, user) => {
-    if (err) return next(err);
-    if (!user) {
-      return res
-        .status(403)
-        .json({ error: 'Only registered users may perform this action.' });
-    }
-    req.user = user;
-    next();
-  })(req, res, next);
-};
-
-// Check that the user is the administrator (only them can delete the server).
-exports.check_admin = function (req, res, next) {
-  Server.findById(req.params.serverId).exec((err, server) => {
-    if (err) return next(err);
-    if (!server) return res.json({ error: 'Server not found. ' });
-    if (req.user._id !== server.admin.toString()) {
-      return res
-        .status(403)
-        .json({ error: 'Only the administrator can delete the server. ' });
-    }
-    next();
-  });
 };

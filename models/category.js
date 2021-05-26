@@ -4,9 +4,9 @@ const { Schema } = mongoose;
 
 const CategorySchema = new Schema({
   name: { type: String, required: true },
-  timestamp: { type: Date, required: true },
   server: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
   channel: [{ type: Schema.Types.ObjectId, ref: 'Channel' }],
+  timestamp: { type: Date, required: true },
 });
 
 CategorySchema.virtual('url').get(function () {

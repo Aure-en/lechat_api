@@ -6,11 +6,11 @@ const ChannelSchema = new Schema({
   name: { type: String, required: true },
   timestamp: { type: Date, required: true },
   server: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
-  category: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
+  category: { type: Schema.Types.ObjectId, ref: 'Server' },
 });
 
 ChannelSchema.virtual('url').get(function () {
-  return `/servers/${this.server}/categories/${this.category}/channels/${this._id}`;
+  return `/servers/${this.server}/channels/${this._id}`;
 });
 
 module.exports = mongoose.model('Channel', ChannelSchema);

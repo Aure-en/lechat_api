@@ -1,31 +1,44 @@
-const express = require("express");
+const express = require('express');
+const checkAuth = require('../auth/checkAuth');
 
 const router = express.Router();
-const serverController = require("../controllers/serverController");
+const serverController = require('../controllers/serverController');
+const categoryRouter = require('./category');
+const channelRouter = require('./channel');
 
 // GET all servers
-router.get("/", serverController.server_list);
+router.get('/', serverController.server_list);
 
 // POST to create a new server
-router.post("/", serverController.check_user, serverController.server_create);
+router.post(
+  '/',
+  checkAuth.check_user,
+  serverController.server_create,
+);
 
 // PUT to update a server
 router.put(
-  "/:serverId",
-  serverController.check_user,
-  serverController.check_admin,
-  serverController.server_update
+  '/:serverId',
+  checkAuth.check_user,
+  checkAuth.check_admin,
+  serverController.server_update,
 );
 
 // DELETE a server
 router.delete(
-  "/:serverId",
-  serverController.check_user,
-  serverController.check_admin,
-  serverController.server_delete
+  '/:serverId',
+  checkAuth.check_user,
+  checkAuth.check_admin,
+  serverController.server_delete,
 );
 
 // GET a specific server
-router.get("/:serverId", serverController.server_detail);
+router.get('/:serverId', serverController.server_detail);
+
+// Requests for categories
+router.use('/:serverId/categories', categoryRouter);
+
+// Request for channels
+router.use('/:serverId/channels', channelRouter);
 
 module.exports = router;

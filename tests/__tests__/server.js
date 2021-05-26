@@ -44,7 +44,7 @@ describe('Creation', () => {
 
   test('Anonymous users cannot create a server.', async (done) => {
     const res = await request(app).post('/servers').send(server);
-    expect(res.status).toBe(403); // Unauthorized
+    expect(res.status).toBe(401); // Unauthorized
     done();
   });
 
@@ -84,7 +84,7 @@ describe('Update', () => {
     const res = await request(app)
       .put(`/servers/${server._id}`)
       .send({ name: 'Renamed' });
-    expect(res.status).toBe(403); // Unauthorized
+    expect(res.status).toBe(401); // Unauthorized
     done();
   });
 
@@ -96,7 +96,7 @@ describe('Update', () => {
         'Content-Type': 'application/json',
       })
       .send({ name: 'Renamed' });
-    expect(res.status).toBe(403); // Unauthorized
+    expect(res.status).toBe(403); // Forbidden
     done();
   });
 
@@ -133,7 +133,7 @@ describe('Delete', () => {
 
   test('Anonymous users cannot delete a server', async (done) => {
     const res = await request(app).delete(`/servers/${server._id}`);
-    expect(res.status).toBe(403); // Unauthorized
+    expect(res.status).toBe(401); // Unauthorized
     done();
   });
 
@@ -141,7 +141,7 @@ describe('Delete', () => {
     const res = await request(app)
       .delete(`/servers/${server._id}`)
       .set({ Authorization: `Bearer ${user.token}` });
-    expect(res.status).toBe(403); // Unauthorized
+    expect(res.status).toBe(403); // Forbidden
     done();
   });
 
