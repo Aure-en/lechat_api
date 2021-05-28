@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 
 // POST Login
-exports.auth_login_post = [
+exports.auth_login = [
   body('email')
     .trim()
     .isLength({ min: 1 })
@@ -44,7 +44,7 @@ exports.auth_login_post = [
   },
 ];
 
-exports.auth_signup_post = [
+exports.auth_signup = [
   body('username', 'Username must be specified').trim().isLength({ min: 1 }),
   body('email')
     .trim()
@@ -60,7 +60,7 @@ exports.auth_signup_post = [
     if (!errors.isEmpty()) {
       return res.json(errors);
     }
-    next();
+    return next();
   },
 
   // Check if email is already taken
@@ -80,7 +80,7 @@ exports.auth_signup_post = [
         });
       }
     });
-    next();
+    return next();
   },
 
   // Everything is fine, save the user.

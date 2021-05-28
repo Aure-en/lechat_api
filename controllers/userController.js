@@ -212,26 +212,29 @@ exports.user_update_email = [
 ];
 
 // Delete a user
-exports.user_delete = function (req, res, next) {
-  // Check password
-  bcrypt.compare(req.body.password, req.user.password, (err, response) => {
-    if (response) {
-      return next();
-    }
-    return res.json({
-      errors: [
-        {
-          value: '',
-          msg: 'Incorrect password.',
-          param: 'password',
-          location: 'body',
-        },
-      ],
+exports.user_delete = [
+  (req, res, next) => {
+    bcrypt.compare(req.body.password, req.user.password, (err, response) => {
+      if (response) {
+        return next();
+      }
+      return res.json({
+        errors: [
+          {
+            value: '',
+            msg: 'Incorrect password.',
+            param: 'password',
+            location: 'body',
+          },
+        ],
+      });
     });
-  });
+  },
 
-  User.findByIdAndRemove(req.params.userId, (err) => {
-    if (err) return next(err);
-    res.json({ sucess: 'Account has been deleted.' });
-  });
-};
+  (req, res, next) => {
+    User.findByIdAndRemove(req.params.userId, (err) => {
+      if (err) return next(err);
+      res.json({ success: 'Account has been deleted.' });
+    });
+  },
+];

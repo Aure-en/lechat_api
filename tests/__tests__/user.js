@@ -183,3 +183,54 @@ describe('Only the user can update their own informations', () => {
     done();
   });
 });
+
+describe('Account deletion', () => {
+  let randomUser;
+
+  beforeAll(async (done) => {
+    // Create a random other user
+    const res = await request(app).post('/auth/signup').send({
+      username: 'Random1',
+      email: 'random1@random.com',
+      password: 'random_password',
+    });
+    randomUser = res.body;
+    done();
+  });
+
+  test('An user cannot delete another user account', async (done) => {
+    const res = await request(app)
+      .delete(`/users/${user.user._id}`)
+      .set({
+        Authorization: `Bearer ${randomUser.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ password: 'wrong_password' });
+    expect(res.status).toBe(403);
+    done();
+  });
+
+  test('User cannot delete their account without the correct password', async (done) => {
+    const res = await request(app)
+      .delete(`/users/${user.user._id}`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ password: 'wrong_password' });
+    expect(res.body.errors.filter((error) => error.msg.match(/incorrect password/i)).length).toBe(1);
+    done();
+  });
+
+  test('User can delete their account', async (done) => {
+    const res = await request(app)
+      .delete(`/users/${user.user._id}`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ password: 'user_password' });
+    expect(res.body.success).toBe('Account has been deleted.');
+    done();
+  });
+});
