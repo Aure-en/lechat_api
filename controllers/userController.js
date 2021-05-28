@@ -58,11 +58,11 @@ exports.user_update_username = [
   },
 ];
 
-exports.user.update_password = [
+exports.user_update_password = [
   // Validation
 
   // Empty fields
-  body('current_password', 'Current password must be specified')
+  body('password', 'Current password must be specified')
     .trim()
     .isLength({ min: 1 })
     .escape(),
@@ -85,10 +85,28 @@ exports.user.update_password = [
     next();
   },
 
-  // Password confirmation.
-  body('confirm_password').custom((value, { req, res }) => {
-    if (!value !== req.body.new_password) {
-      res.json({
+  // Check passwords
+  (req, res, next) => {
+    bcrypt.compare(req.body.password, req.user.password, (err, response) => {
+      if (response) {
+        return next();
+      }
+      return res.json({
+        errors: [
+          {
+            value: '',
+            msg: 'Incorrect password.',
+            param: 'password',
+            location: 'body',
+          },
+        ],
+      });
+    });
+  },
+
+  (req, res, next) => {
+    if (req.body.confirm_password !== req.body.new_password) {
+      return res.json({
         errors: [
           {
             value: '',
@@ -105,7 +123,8 @@ exports.user.update_password = [
         ],
       });
     }
-  }),
+    next();
+  },
 
   // Everything is fine. Saves password.
   (req, res, next) => {
@@ -119,7 +138,7 @@ exports.user.update_password = [
   },
 ];
 
-exports.user.update_email = [
+exports.user_update_email = [
   // Validation
 
   // Empty fields
@@ -137,6 +156,25 @@ exports.user.update_email = [
       return res.json(errors);
     }
     next();
+  },
+
+  // Check password
+  (req, res, next) => {
+    bcrypt.compare(req.body.password, req.user.password, (err, response) => {
+      if (response) {
+        return next();
+      }
+      return res.json({
+        errors: [
+          {
+            value: '',
+            msg: 'Incorrect password.',
+            param: 'password',
+            location: 'body',
+          },
+        ],
+      });
+    });
   },
 
   // Check if email is already taken
@@ -175,12 +213,22 @@ exports.user.update_email = [
 
 // Delete a user
 exports.user_delete = function (req, res, next) {
-  // Only the user themself can delete their account
-  if (req.user._id !== req.params.userId) {
-    res
-      .status(403)
-      .json({ error: 'You do not have permission to perform this operation.' });
-  }
+  // Check password
+  bcrypt.compare(req.body.password, req.user.password, (err, response) => {
+    if (response) {
+      return next();
+    }
+    return res.json({
+      errors: [
+        {
+          value: '',
+          msg: 'Incorrect password.',
+          param: 'password',
+          location: 'body',
+        },
+      ],
+    });
+  });
 
   User.findByIdAndRemove(req.params.userId, (err) => {
     if (err) return next(err);

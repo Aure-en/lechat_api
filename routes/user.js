@@ -9,22 +9,18 @@ router.put(
   '/:userId/password',
   checkAuth.check_user,
   checkAuth.check_user_id,
-  checkAuth.check_password,
-  checkAuth.check_permission,
   userController.user_update_password,
 );
 router.put(
   '/:userId/email',
   checkAuth.check_user,
   checkAuth.check_user_id,
-  checkAuth.check_permission,
   userController.user_update_email,
 );
 router.put(
   '/:userId/username',
   checkAuth.check_user,
   checkAuth.check_user_id,
-  checkAuth.check_permission,
   userController.user_update_username,
 );
 
@@ -33,8 +29,6 @@ router.delete(
   '/:userId',
   checkAuth.check_user,
   checkAuth.check_user_id,
-  checkAuth.check_password,
-  checkAuth.check_permission,
   userController.user_delete,
 );
 

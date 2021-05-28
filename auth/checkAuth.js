@@ -99,29 +99,10 @@ exports.check_author = function (req, res, next) {
 // Check the user identity
 exports.check_user_id = function (req, res, next) {
   if (req.user._id === req.params.userId) {
-    res.locals.isAllowed = true;
+    next();
   } else {
-    res.json({ error: 'You do not have permission to perform this operation.' });
+    res.status(403).json({ error: 'You do not have permission to perform this operation.' });
   }
-  next();
-};
-
-// Check password
-exports.check_password = function (req, res, next) {
-  User.findOne({ _id: req.params.userId }, (err, user) => {
-    if (err) return next(err);
-    if (!user) {
-      return res.json({ error: 'User not found.' });
-    }
-
-    bcrypt.compare(req.body.password, user.password, (err, res) => {
-      if (res) {
-        res.locals.isAllowed = true;
-        next();
-      }
-      return res.json({ error: 'Incorrect password.' });
-    });
-  });
 };
 
 // Check if res.locals.isAllowed = true
