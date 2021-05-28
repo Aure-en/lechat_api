@@ -4,6 +4,7 @@ const serverRouter = require('./server');
 const categoryRouter = require('./category');
 const channelRouter = require('./channel');
 const messageRouter = require('./message');
+const userRouter = require('./user');
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.use('/servers', serverRouter);
 router.use('/categories', categoryRouter);
 router.use('/channels', channelRouter);
 router.use('/messages', messageRouter);
+router.use('/users', userRouter);
 
 module.exports = router;

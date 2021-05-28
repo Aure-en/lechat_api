@@ -24,14 +24,9 @@ router.delete(
 );
 
 // GET a specific category
-router.get(
-  '/:categoryId', categoryController.category_detail,
-);
+router.get('/:categoryId', categoryController.category_detail);
 
 // GET to get all the channels in a category
-router.get(
-  '/:categoryId/channels',
-  channelController.channel_list,
-);
+router.get('/:categoryId/channels', channelController.channel_list);
 
 module.exports = router;
