@@ -1,5 +1,6 @@
 const request = require('supertest');
 const async = require('async');
+const path = require('path');
 const { dbConnect, dbDisconnect } = require('../mongoTesting');
 const app = require('../app');
 
@@ -82,7 +83,7 @@ describe('Update', () => {
 
   test('Anonymous users cannot edit a server', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}`)
+      .put(`/servers/${server._id}/name`)
       .send({ name: 'Renamed' });
     expect(res.status).toBe(401); // Unauthorized
     done();
@@ -90,7 +91,7 @@ describe('Update', () => {
 
   test('Users that do not have permissions cannot edit the server', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}`)
+      .put(`/servers/${server._id}/name`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ describe('Update', () => {
 
   test('Users with permission can edit the server', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}`)
+      .put(`/servers/${server._id}/name`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
@@ -110,6 +111,29 @@ describe('Update', () => {
       .send({ name: 'Renamed' })
       .redirects(1);
     expect(res.body.name).toBe('Renamed');
+    done();
+  });
+
+  test('The server icon can be edited', async (done) => {
+    const res = await request(app)
+      .put(`/servers/${server._id}/icon`)
+      .set({
+        Authorization: `Bearer ${admin.token}`,
+      })
+      .attach('image', path.resolve(__dirname, '../assets/image.jpg'))
+      .redirects(1);
+    expect(res.body.icon).toBeDefined();
+    done();
+  });
+
+  test('The server icon can be removed', async (done) => {
+    const res = await request(app)
+      .put(`/servers/${server._id}/icon`)
+      .set({
+        Authorization: `Bearer ${admin.token}`,
+      })
+      .redirects(1);
+    expect(res.body.icon).not.toBeDefined();
     done();
   });
 });

@@ -241,6 +241,7 @@ exports.user_update_avatar = (req, res, next) => {
       res.redirect(303, user.url);
     });
   } else {
+    // Remove the avatar
     User.findByIdAndUpdate(
       req.params.userId,
       { $unset: { avatar: '' } },

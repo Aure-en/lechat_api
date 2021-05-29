@@ -1,10 +1,8 @@
 const passport = require('passport');
-const bcrypt = require('bcryptjs');
 const Server = require('../models/server');
 const Category = require('../models/category');
 const Channel = require('../models/channel');
 const Message = require('../models/message');
-const User = require('../models/user');
 
 // Check that the user is logged in
 exports.check_user = function (req, res, next) {
@@ -25,7 +23,7 @@ exports.check_admin = function (req, res, next) {
   // If the user already has permission, no need to check.
   if (res.locals.isAllowed) return next();
 
-  switch (req.baseUrl) {
+  switch (req.baseUrl.replace(req._parsedUrl.pathname, '')) {
     case '/servers':
       Server.findById(req.params.serverId).exec((err, server) => {
         if (err) return next(err);

@@ -1,5 +1,7 @@
 const async = require('async');
 const { body, validationResult } = require('express-validator');
+const fs = require('fs');
+const path = require('path');
 const Server = require('../models/server');
 const User = require('../models/user');
 const Message = require('../models/message');
@@ -52,7 +54,7 @@ exports.server_create = [
 ];
 
 // Update a server (PUT)
-exports.server_update = [
+exports.server_update_name = [
   // Validation
   body('name', 'Name must be specified').trim().isLength({ min: 1 }).escape(),
 
@@ -79,6 +81,41 @@ exports.server_update = [
     );
   },
 ];
+
+exports.server_update_icon = (req, res, next) => {
+  if (req.file) {
+    // Temporarily saves the image and extracts the data
+    const icon = {
+      name: req.file.filename,
+      data: fs.readFileSync(
+        path.join(__dirname, `../temp/${req.file.filename}`),
+      ),
+      contentType: req.file.mimetype,
+    };
+
+    // Delete the image from the disk after using it
+    fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
+      if (err) throw err;
+    });
+
+    // Save the image
+    Server.findByIdAndUpdate(req.params.serverId, { icon }, {}, (err, server) => {
+      if (err) return next(err);
+      res.redirect(303, server.url);
+    });
+  } else {
+    // Remove the icon
+    Server.findByIdAndUpdate(
+      req.params.serverId,
+      { $unset: { icon: '' } },
+      {},
+      (err, server) => {
+        if (err) return next(err);
+        res.redirect(303, server.url);
+      },
+    );
+  }
+};
 
 // Delete a server (DELETE)
 exports.server_delete = function (req, res, next) {

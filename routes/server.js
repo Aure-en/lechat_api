@@ -1,5 +1,6 @@
 const express = require('express');
 const checkAuth = require('../auth/checkAuth');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 const serverController = require('../controllers/serverController');
@@ -17,13 +18,37 @@ router.post(
   serverController.server_create,
 );
 
-// PUT to update a server
-router.put(
-  '/:serverId',
+// POST to create a new message
+router.post(
+  '/:serverId/channels/:channelId/messages',
+  checkAuth.check_user,
+  messageController.message_create,
+);
+
+// GET to get the server categories
+router.get('/:serverId/categories', categoryController.category_list);
+
+// GET a specific server
+router.get('/:serverId', serverController.server_detail);
+
+// Check permissions for CUD Operations on the server.
+router.use(
+  '/:serverId/*',
   checkAuth.check_user,
   checkAuth.check_admin,
   checkAuth.check_permission,
-  serverController.server_update,
+);
+
+// PUT to update a server
+router.put(
+  '/:serverId/name',
+  serverController.server_update_name,
+);
+
+router.put(
+  '/:serverId/icon',
+  upload.image,
+  serverController.server_update_icon,
 );
 
 // DELETE a server
@@ -35,35 +60,16 @@ router.delete(
   serverController.server_delete,
 );
 
-// GET a specific server
-router.get('/:serverId', serverController.server_detail);
-
 // POST to create a new category
 router.post(
   '/:serverId/categories',
-  checkAuth.check_user,
-  checkAuth.check_admin,
-  checkAuth.check_permission,
   categoryController.category_create,
 );
-
-// GET to get the server categories
-router.get('/:serverId/categories', categoryController.category_list);
 
 // POST to create a channel in a category
 router.post(
   '/:serverId/categories/:categoryId/channels',
-  checkAuth.check_user,
-  checkAuth.check_admin,
-  checkAuth.check_permission,
   channelController.channel_create,
-);
-
-// POST to create a new message
-router.post(
-  '/:serverId/channels/:channelId/messages',
-  checkAuth.check_user,
-  messageController.message_create,
 );
 
 module.exports = router;
