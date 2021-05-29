@@ -1,4 +1,5 @@
 const { body, validationResult } = require('express-validator');
+const async = require('async');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -301,30 +302,54 @@ exports.user_server_join = [
     });
   },
 
-  // Join the server
   (req, res, next) => {
-    User.findByIdAndUpdate(
-      req.params.userId,
-      { $push: { server: req.params.serverId } },
-      {},
-      (err, user) => {
-        if (err) return next(err);
-        res.redirect(303, user.url);
+    async.parallel([
+      // Join the server
+      function (callback) {
+        User.findByIdAndUpdate(
+          req.params.userId,
+          { $push: { server: req.params.serverId } },
+          {},
+        ).exec(callback);
       },
-    );
+
+      // Increment server members
+      function (callback) {
+        Server.findByIdAndUpdate(
+          req.params.serverId,
+          { $inc: { members: 1 } },
+          {},
+        ).exec(callback);
+      },
+    ], (err) => {
+      if (err) return next(err);
+      res.redirect(303, `/users/${req.params.userId}`);
+    });
   },
 ];
 
 // User leaves a server
 exports.user_server_leave = function (req, res, next) {
-  // Remove the server from the user's server list.
-  User.findByIdAndUpdate(
-    req.params.userId,
-    { $pull: { server: req.params.serverId } },
-    {},
-    (err, user) => {
-      if (err) return next(err);
-      res.redirect(303, user.url);
+  async.parallel([
+    // Remove the server from the user's server list.
+    function (callback) {
+      User.findByIdAndUpdate(
+        req.params.userId,
+        { $pull: { server: req.params.serverId } },
+        {},
+      ).exec(callback);
     },
-  );
+
+    // Decrement server members
+    function (callback) {
+      Server.findByIdAndUpdate(
+        req.params.serverId,
+        { $inc: { members: -1 } },
+        {},
+      ).exec(callback);
+    },
+  ], (err) => {
+    if (err) return next(err);
+    res.redirect(303, `/users/${req.params.userId}`);
+  });
 };

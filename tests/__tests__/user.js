@@ -50,6 +50,21 @@ describe('Server update', () => {
     done();
   });
 
+  test('When creating a server, the user automatically joins it', async (done) => {
+    const serverRes = await request(app)
+      .post('/servers')
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ name: 'Server' })
+      .redirects(1);
+
+    const res = await request(app).get(`/users/${user.user._id}`);
+    expect(res.body.server).toEqual(expect.arrayContaining([serverRes.body._id]));
+    done();
+  });
+
   test('Only a registered user can join a server', async (done) => {
     const res = await request(app)
       .post(`/users/${user.user._id}/servers/${server._id}`)

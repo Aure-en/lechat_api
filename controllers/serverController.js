@@ -46,7 +46,22 @@ exports.server_create = [
       admin: req.user._id,
       timestamp: new Date(),
     });
-    server.save((err) => {
+
+    async.parallel([
+      // Save the server
+      function(callback) {
+        server.save(callback);
+      },
+
+      // Add the server to the user's server list
+      function(callback) {
+        User.findByIdAndUpdate(
+          req.user._id,
+          { $push: { server: server._id } },
+          {},
+        ).exec(callback);
+      },
+    ], (err) => {
       if (err) return next(err);
       return res.redirect(303, server.url);
     });

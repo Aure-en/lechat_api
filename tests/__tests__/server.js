@@ -175,7 +175,51 @@ describe('Delete', () => {
       .set({ Authorization: `Bearer ${admin.token}` })
       .redirects(1); // Send servers list.
     // Server does not exist anymore.
-    expect(res.body.filter((existing) => existing._id === server._id).length).toBe(0);
+    expect(
+      res.body.filter((existing) => existing._id === server._id).length,
+    ).toBe(0);
+    done();
+  });
+});
+
+describe('Members', () => {
+  // Create a server
+  let server;
+
+  beforeAll(async (done) => {
+    const res = await request(app)
+      .post('/servers')
+      .set({
+        Authorization: `Bearer ${admin.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ name: 'Server' })
+      .redirects(1);
+    server = res.body;
+    done();
+  });
+
+  test('The members count increments when an user joins the server', async (done) => {
+    const res = await request(app)
+      .post(`/users/${user.user._id}/servers/${server._id}`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .redirects(1);
+    expect(res.body.server).toEqual(expect.arrayContaining([server._id]));
+    done();
+  });
+
+  test('The members count decrements when an user leaves the server', async (done) => {
+    const res = await request(app)
+      .delete(`/users/${user.user._id}/servers/${server._id}`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .redirects(1);
+    expect(res.body.server).not.toEqual(expect.arrayContaining([server._id]));
     done();
   });
 });

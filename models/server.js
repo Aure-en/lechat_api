@@ -13,7 +13,7 @@ const ServerSchema = new Schema({
     data: Buffer,
     contentType: String,
   },
-  members: { type: Number, required: true, default: 0 },
+  members: { type: Number, required: true, default: 1 },
 });
 
 ServerSchema.virtual('url').get(function () {
