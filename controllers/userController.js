@@ -1,5 +1,7 @@
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 const User = require('../models/user');
 
 // Detail of a specific user (GET)
@@ -210,6 +212,34 @@ exports.user_update_email = [
     );
   },
 ];
+
+exports.user_update_avatar = (req, res, next) => {
+  console.log(req.file);
+  if (req.file) {
+    // Temporarily saves the image and extracts the data
+    const avatar = {
+      name: req.file.filename,
+      data: fs.readFileSync(path.join(__dirname, `../temp/${req.file.filename}`)),
+      contentType: req.file.mimetype,
+    };
+
+    // Delete the image from the disk after using it
+    fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
+      if (err) throw err;
+    });
+
+    // Save the image
+    User.findByIdAndUpdate(req.params.userId, { avatar }, {}, (err, user) => {
+      if (err) return next(err);
+      res.redirect(303, user.url);
+    });
+  } else {
+    User.findByIdAndUpdate(req.params.userId, { $unset: { avatar: '' } }, {}, (err, user) => {
+      if (err) return next(err);
+      res.redirect(303, user.url);
+    });
+  }
+};
 
 // Delete a user
 exports.user_delete = [

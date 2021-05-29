@@ -1,4 +1,5 @@
 const request = require('supertest');
+const path = require('path');
 const { dbConnect, dbDisconnect } = require('../mongoTesting');
 const app = require('../app');
 
@@ -153,6 +154,31 @@ describe('Password update', () => {
       .send({ password: 'user_password', new_password: 'new_password', confirm_password: 'new_password' })
       .redirects(1);
     expect(res.body.password).not.toBe(previousPassword);
+    done();
+  });
+});
+
+describe('Avatar update', () => {
+  test('User can upload an avatar', async (done) => {
+    const res = await request(app)
+      .put(`/users/${user.user._id}/avatar`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+      })
+      .attach('image', path.resolve(__dirname, '../assets/image.jpg'))
+      .redirects(1);
+    expect(res.body.avatar).toBeDefined();
+    done();
+  });
+
+  test('User can remove their avatar', async (done) => {
+    const res = await request(app)
+      .put(`/users/${user.user._id}/avatar`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+      })
+      .redirects(1);
+    expect(res.body.avatar).not.toBeDefined();
     done();
   });
 });
