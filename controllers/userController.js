@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 const User = require('../models/user');
+const Server = require('../models/server');
 
 // Detail of a specific user (GET)
 exports.user_detail = function (req, res, next) {
@@ -132,10 +133,15 @@ exports.user_update_password = [
   (req, res, next) => {
     bcrypt.hash(req.body.new_password, 10, (err, hashedPassword) => {
       if (err) return next(err);
-      User.findByIdAndUpdate(req.params.userId, { password: hashedPassword }, {}, (err, user) => {
-        if (err) return next(err);
-        return res.redirect(303, user.url);
-      });
+      User.findByIdAndUpdate(
+        req.params.userId,
+        { password: hashedPassword },
+        {},
+        (err, user) => {
+          if (err) return next(err);
+          return res.redirect(303, user.url);
+        },
+      );
     });
   },
 ];
@@ -200,7 +206,7 @@ exports.user_update_email = [
   },
 
   (req, res, next) => {
-  // Everything is fine. Save the email.
+    // Everything is fine. Save the email.
     User.findByIdAndUpdate(
       req.params.userId,
       { email: req.body.email },
@@ -214,12 +220,13 @@ exports.user_update_email = [
 ];
 
 exports.user_update_avatar = (req, res, next) => {
-  console.log(req.file);
   if (req.file) {
     // Temporarily saves the image and extracts the data
     const avatar = {
       name: req.file.filename,
-      data: fs.readFileSync(path.join(__dirname, `../temp/${req.file.filename}`)),
+      data: fs.readFileSync(
+        path.join(__dirname, `../temp/${req.file.filename}`),
+      ),
       contentType: req.file.mimetype,
     };
 
@@ -234,10 +241,15 @@ exports.user_update_avatar = (req, res, next) => {
       res.redirect(303, user.url);
     });
   } else {
-    User.findByIdAndUpdate(req.params.userId, { $unset: { avatar: '' } }, {}, (err, user) => {
-      if (err) return next(err);
-      res.redirect(303, user.url);
-    });
+    User.findByIdAndUpdate(
+      req.params.userId,
+      { $unset: { avatar: '' } },
+      {},
+      (err, user) => {
+        if (err) return next(err);
+        res.redirect(303, user.url);
+      },
+    );
   }
 };
 
@@ -268,3 +280,50 @@ exports.user_delete = [
     });
   },
 ];
+
+// User joins a server
+exports.user_server_join = [
+  // Check that the server exists
+  (req, res, next) => {
+    Server.findById(req.params.serverId).exec((err, server) => {
+      if (err) return next(err);
+      if (!server) return res.status(404).json({ error: 'Server not found.' });
+    });
+    next();
+  },
+
+  // Check that the user hasn't already joined the server
+  (req, res, next) => {
+    User.findById(req.params.userId, 'server').exec((err, user) => {
+      if (user.server.includes(req.params.serverId)) return res.json({ error: 'Server already joined.' });
+      next();
+    });
+  },
+
+  // Join the server
+  (req, res, next) => {
+    User.findByIdAndUpdate(
+      req.params.userId,
+      { $push: { server: req.params.serverId } },
+      {},
+      (err, user) => {
+        if (err) return next(err);
+        res.redirect(303, user.url);
+      },
+    );
+  },
+];
+
+// User leaves a server
+exports.user_server_leave = function (req, res, next) {
+  // Remove the server from the user's server list.
+  User.findByIdAndUpdate(
+    req.params.userId,
+    { $pull: { server: req.params.serverId } },
+    {},
+    (err, user) => {
+      if (err) return next(err);
+      res.redirect(303, user.url);
+    },
+  );
+};

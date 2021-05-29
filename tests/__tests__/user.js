@@ -25,6 +25,58 @@ test('User informations can be read', async (done) => {
   done();
 });
 
+describe('Server update', () => {
+  // Create a server
+  let admin;
+  let server;
+
+  beforeAll(async (done) => {
+    const adminRes = await request(app).post('/auth/signup').send({
+      username: 'Admin',
+      email: 'admin@admin.com',
+      password: 'admin_password',
+    });
+    admin = adminRes.body;
+
+    const serverRes = await request(app)
+      .post('/servers')
+      .set({
+        Authorization: `Bearer ${admin.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ name: 'Server' })
+      .redirects(1); // Redirect to the GET server detail.
+    server = serverRes.body;
+    done();
+  });
+
+  test('Only a registered user can join a server', async (done) => {
+    const res = await request(app)
+      .post(`/users/${user.user._id}/servers/${server._id}`)
+      .redirects(1);
+    expect(res.status).toBe(401);
+    done();
+  });
+
+  test('A registered user can join a server', async (done) => {
+    const res = await request(app)
+      .post(`/users/${user.user._id}/servers/${server._id}`)
+      .set({ Authorization: `Bearer ${user.token}` })
+      .redirects(1);
+    expect(res.body.server).toEqual(expect.arrayContaining([server._id]));
+    done();
+  });
+
+  test('A registered user can leave a server', async (done) => {
+    const res = await request(app)
+      .delete(`/users/${user.user._id}/servers/${server._id}`)
+      .set({ Authorization: `Bearer ${user.token}` })
+      .redirects(1);
+    expect(res.body.server).not.toEqual(expect.arrayContaining([server._id]));
+    done();
+  });
+});
+
 describe('Username update', () => {
   test('Users cannot submit an empty username', async (done) => {
     const res = await request(app)
@@ -34,7 +86,9 @@ describe('Username update', () => {
         'Content-Type': 'application/json',
       })
       .send({ username: '' });
-    expect(res.body.errors.filter((error) => error.msg.match(/username must be specified/i)).length).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/username must be specified/i)).length,
+    ).toBe(1);
     done();
   });
 
@@ -61,8 +115,12 @@ describe('Email update', () => {
         'Content-Type': 'application/json',
       })
       .send({ email: '', password: '' });
-    expect(res.body.errors.filter((error) => error.msg.match(/email must be specified/i)).length).toBe(1);
-    expect(res.body.errors.filter((error) => error.msg.match(/password must be specified/i)).length).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/email must be specified/i)).length,
+    ).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/password must be specified/i)).length,
+    ).toBe(1);
     done();
   });
 
@@ -74,7 +132,10 @@ describe('Email update', () => {
         'Content-Type': 'application/json',
       })
       .send({ email: 'Test' });
-    expect(res.body.errors.filter((error) => error.msg.match(/invalid email/i)).length).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/invalid email/i))
+        .length,
+    ).toBe(1);
     done();
   });
 
@@ -86,7 +147,10 @@ describe('Email update', () => {
         'Content-Type': 'application/json',
       })
       .send({ email: 'new@user.com', password: 'wrong_password' });
-    expect(res.body.errors.filter((error) => error.msg.match(/incorrect password/i)).length).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/incorrect password/i))
+        .length,
+    ).toBe(1);
     done();
   });
 
@@ -113,9 +177,15 @@ describe('Password update', () => {
         'Content-Type': 'application/json',
       })
       .send({ password: '', new_password: '', confirmation_password: '' });
-    expect(res.body.errors.filter((error) => error.msg.match(/current password must be specified/i)).length).toBe(1);
-    expect(res.body.errors.filter((error) => error.msg.match(/new password must be specified/i)).length).toBe(1);
-    expect(res.body.errors.filter((error) => error.msg.match(/new password must be confirmed/i)).length).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/current password must be specified/i)).length,
+    ).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/new password must be specified/i)).length,
+    ).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/new password must be confirmed/i)).length,
+    ).toBe(1);
     done();
   });
 
@@ -126,8 +196,15 @@ describe('Password update', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ password: 'wrong_password', new_password: 'new_password', confirm_password: 'new_password' });
-    expect(res.body.errors.filter((error) => error.msg.match(/incorrect password/i)).length).toBe(1);
+      .send({
+        password: 'wrong_password',
+        new_password: 'new_password',
+        confirm_password: 'new_password',
+      });
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/incorrect password/i))
+        .length,
+    ).toBe(1);
     done();
   });
 
@@ -138,8 +215,14 @@ describe('Password update', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ password: 'user_password', new_password: 'new_password', confirm_password: 'new_wrong_password' });
-    expect(res.body.errors.filter((error) => error.msg.match(/passwords do not match/i)).length).toBeGreaterThan(0);
+      .send({
+        password: 'user_password',
+        new_password: 'new_password',
+        confirm_password: 'new_wrong_password',
+      });
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/passwords do not match/i)).length,
+    ).toBeGreaterThan(0);
     done();
   });
 
@@ -151,7 +234,11 @@ describe('Password update', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ password: 'user_password', new_password: 'new_password', confirm_password: 'new_password' })
+      .send({
+        password: 'user_password',
+        new_password: 'new_password',
+        confirm_password: 'new_password',
+      })
       .redirects(1);
     expect(res.body.password).not.toBe(previousPassword);
     done();
@@ -244,7 +331,10 @@ describe('Account deletion', () => {
         'Content-Type': 'application/json',
       })
       .send({ password: 'wrong_password' });
-    expect(res.body.errors.filter((error) => error.msg.match(/incorrect password/i)).length).toBe(1);
+    expect(
+      res.body.errors.filter((error) => error.msg.match(/incorrect password/i))
+        .length,
+    ).toBe(1);
     done();
   });
 

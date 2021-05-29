@@ -5,34 +5,48 @@ const upload = require('../middleware/upload');
 
 const router = express.Router();
 
+// GET a specific user detail
+router.get('/:userId', userController.user_detail);
+
+// Check permission (only users themselves can modify their details)
+router.use(
+  '/:userId/*',
+  checkAuth.check_user,
+  checkAuth.check_user_id,
+);
+
 // PUT to update an user details
 router.put(
   '/:userId/password',
-  checkAuth.check_user,
-  checkAuth.check_user_id,
   userController.user_update_password,
 );
 
 router.put(
   '/:userId/email',
-  checkAuth.check_user,
-  checkAuth.check_user_id,
   userController.user_update_email,
 );
 
 router.put(
   '/:userId/username',
-  checkAuth.check_user,
-  checkAuth.check_user_id,
   userController.user_update_username,
 );
 
 router.put(
   '/:userId/avatar',
   upload.image,
-  checkAuth.check_user,
-  checkAuth.check_user_id,
   userController.user_update_avatar,
+);
+
+// POST to join a server
+router.post(
+  '/:userId/servers/:serverId',
+  userController.user_server_join,
+);
+
+// DELETE to leave a server
+router.delete(
+  '/:userId/servers/:serverId',
+  userController.user_server_leave,
 );
 
 // DELETE an user account
@@ -42,8 +56,5 @@ router.delete(
   checkAuth.check_user_id,
   userController.user_delete,
 );
-
-// GET a specific user detail
-router.get('/:userId', userController.user_detail);
 
 module.exports = router;
