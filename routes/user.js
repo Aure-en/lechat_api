@@ -1,12 +1,20 @@
 const express = require('express');
 const checkAuth = require('../auth/checkAuth');
 const userController = require('../controllers/userController');
+const friendController = require('../controllers/friendController');
 const upload = require('../middleware/upload');
 
 const router = express.Router();
 
 // GET a specific user detail
 router.get('/:userId', userController.user_detail);
+
+// POST to add a friend
+router.post(
+  '/:userId/friends',
+  checkAuth.check_user,
+  friendController.friend_add,
+);
 
 // Check permission (only users themselves can modify their details)
 router.use(
@@ -41,6 +49,18 @@ router.put(
 router.post(
   '/:userId/servers/:serverId',
   userController.user_server_join,
+);
+
+// GET to see all friends
+router.get(
+  '/:userId/friends',
+  friendController.friend_list,
+);
+
+// GET to see all pending friend requests
+router.get(
+  '/:userId/pending',
+  friendController.friend_list_pending,
 );
 
 // DELETE to leave a server

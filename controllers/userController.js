@@ -8,7 +8,10 @@ const Server = require('../models/server');
 
 // Detail of a specific user (GET)
 exports.user_detail = function (req, res, next) {
-  User.findOne({ _id: req.params.userId }).exec((err, user) => {
+  User.findOne(
+    { _id: req.params.userId },
+    'username email avatar _id server',
+  ).exec((err, user) => {
     if (err) return next(err);
     if (!user) {
       res.json({ error: 'User not found. ' });
@@ -303,53 +306,59 @@ exports.user_server_join = [
   },
 
   (req, res, next) => {
-    async.parallel([
-      // Join the server
-      function (callback) {
-        User.findByIdAndUpdate(
-          req.params.userId,
-          { $push: { server: req.params.serverId } },
-          {},
-        ).exec(callback);
-      },
+    async.parallel(
+      [
+        // Join the server
+        function (callback) {
+          User.findByIdAndUpdate(
+            req.params.userId,
+            { $push: { server: req.params.serverId } },
+            {},
+          ).exec(callback);
+        },
 
-      // Increment server members
-      function (callback) {
-        Server.findByIdAndUpdate(
-          req.params.serverId,
-          { $inc: { members: 1 } },
-          {},
-        ).exec(callback);
+        // Increment server members
+        function (callback) {
+          Server.findByIdAndUpdate(
+            req.params.serverId,
+            { $inc: { members: 1 } },
+            {},
+          ).exec(callback);
+        },
+      ],
+      (err) => {
+        if (err) return next(err);
+        res.redirect(303, `/users/${req.params.userId}`);
       },
-    ], (err) => {
-      if (err) return next(err);
-      res.redirect(303, `/users/${req.params.userId}`);
-    });
+    );
   },
 ];
 
 // User leaves a server
 exports.user_server_leave = function (req, res, next) {
-  async.parallel([
-    // Remove the server from the user's server list.
-    function (callback) {
-      User.findByIdAndUpdate(
-        req.params.userId,
-        { $pull: { server: req.params.serverId } },
-        {},
-      ).exec(callback);
-    },
+  async.parallel(
+    [
+      // Remove the server from the user's server list.
+      function (callback) {
+        User.findByIdAndUpdate(
+          req.params.userId,
+          { $pull: { server: req.params.serverId } },
+          {},
+        ).exec(callback);
+      },
 
-    // Decrement server members
-    function (callback) {
-      Server.findByIdAndUpdate(
-        req.params.serverId,
-        { $inc: { members: -1 } },
-        {},
-      ).exec(callback);
+      // Decrement server members
+      function (callback) {
+        Server.findByIdAndUpdate(
+          req.params.serverId,
+          { $inc: { members: -1 } },
+          {},
+        ).exec(callback);
+      },
+    ],
+    (err) => {
+      if (err) return next(err);
+      res.redirect(303, `/users/${req.params.userId}`);
     },
-  ], (err) => {
-    if (err) return next(err);
-    res.redirect(303, `/users/${req.params.userId}`);
-  });
+  );
 };
