@@ -14,8 +14,8 @@ exports.friend_list = function (req, res, next) {
 // List all pending friend requests
 exports.friend_list_pending = function (req, res, next) {
   Friend.find({
-    recipient: req.params.userId,
     status: false,
+    $or: [{ sender: req.params.userId }, { recipient: req.params.userId }],
   }).exec((err, friends) => {
     if (err) return next(err);
     return res.json(friends);
@@ -33,7 +33,7 @@ exports.friend_add = function (req, res, next) {
           error: 'You have already sent this person a friend request.',
         });
       }
-    },
+    }
   );
 
   // If not, send the request.
@@ -45,7 +45,7 @@ exports.friend_add = function (req, res, next) {
 
   request.save((err) => {
     if (err) return next(err);
-    res.redirect(303, `/users/${req.user._id}/friends`);
+    res.redirect(303, `/users/${req.user._id}/pending`);
   });
 };
 
@@ -55,17 +55,24 @@ exports.friend_accept = [
     // Check that the user is the one the request was sent to.
     Friend.findById(req.params.friendId).exec((err, friend) => {
       if (err) return next(err);
-      if (req.user._id !== friend.recipient) {
-        return res.status(403).json({ error: 'You do not have permission to perform this operation.' });
+      if (req.user._id !== friend.recipient.toString()) {
+        return res.status(403).json({
+          error: 'You do not have permission to perform this operation.',
+        });
       }
       next();
     });
   },
   (req, res, next) => {
-    Friend.findByIdAndUpdate(req.params.friendId, { status: true }, {}, (err) => {
-      if (err) return next(err);
-      res.redirect(303, `/users/${req.user._id}/friends`);
-    });
+    Friend.findByIdAndUpdate(
+      req.params.friendId,
+      { status: true },
+      {},
+      (err) => {
+        if (err) return next(err);
+        res.redirect(303, `/users/${req.user._id}/friends`);
+      }
+    );
   },
 ];
 
@@ -75,8 +82,13 @@ exports.friend_delete = [
   (req, res, next) => {
     Friend.findById(req.params.friendId).exec((err, friend) => {
       if (err) return next(err);
-      if (req.user._id !== friend.sender && req.user._id !== friend.recipient) {
-        return res.status(403).json({ error: 'You do not have permission to perform this operation.' });
+      if (
+        req.user._id !== friend.sender.toString() &&
+        req.user._id !== friend.recipient.toString()
+      ) {
+        return res.status(403).json({
+          error: 'You do not have permission to perform this operation.',
+        });
       }
       next();
     });

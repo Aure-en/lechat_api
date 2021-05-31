@@ -4,7 +4,7 @@ const userController = require('../controllers/userController');
 const friendController = require('../controllers/friendController');
 const upload = require('../middleware/upload');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 // GET a specific user detail
 router.get('/:userId', userController.user_detail);
