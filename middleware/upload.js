@@ -8,7 +8,7 @@ const multerStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = file.mimetype.split('/')[1];
-    cb(null, `item-${req.params.id}-${Date.now()}.${ext}`);
+    cb(null, `item-${Date.now()}.${ext}`);
   },
 });
 
@@ -26,6 +26,13 @@ exports.image = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
   limits: { fileSize: 10 ** 7 },
+}).single('image');
+
+// Upload reaction icon (only 1 file, small image)
+exports.icon = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+  limits: { fileSize: 1000 },
 }).single('image');
 
 // Upload any file (max 5)

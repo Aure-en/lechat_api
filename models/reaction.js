@@ -4,7 +4,11 @@ const { Schema } = mongoose;
 
 const ReactionSchema = new Schema({
   name: {
-    type: String, trim: true, required: true, match: /^:.+:$/,
+    type: String,
+    trim: true,
+    required: true,
+    match: /^:.+:$/,
+    lowercase: true,
   },
   image: {
     type: {
@@ -16,17 +20,15 @@ const ReactionSchema = new Schema({
   },
   category: {
     type: String,
-    enum: [
-      'emoji',
-      'letter',
-      'shape',
-      'social',
-      'other',
-      'user',
-      'weather',
-    ],
+    enum: ['emoji', 'letter', 'shape', 'social', 'other', 'user', 'weather'],
     default: 'other',
+    lowercase: true,
+    trim: true,
   },
+});
+
+ReactionSchema.virtual('url').get(function () {
+  return `/reactions/${this._id}`;
 });
 
 module.exports = mongoose.model('Reaction', ReactionSchema);

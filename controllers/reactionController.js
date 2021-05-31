@@ -42,11 +42,38 @@ exports.reaction_create = [
     if (!errors.isEmpty()) {
       return res.json({ errors: errors.array() });
     }
+    next();
+  },
 
+  (req, res, next) => {
+    // Check if the reaction name is already taken
+    Reaction.findOne({ name: `:${req.body.name}:` }).exec((err, reaction) => {
+      if (err) return next(err);
+      if (reaction) {
+        fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
+          if (err) throw err;
+        });
+
+        return res.json({
+          errors: [
+            {
+              value: '',
+              msg: 'Reaction name is already taken.',
+              param: 'name',
+              location: 'body',
+            },
+          ],
+        });
+      }
+      next();
+    });
+  },
+
+  (req, res, next) => {
     // Everything is fine. Save the reaction.
     const reaction = new Reaction({
-      name: req.body.name,
-      type: req.body.type,
+      name: `:${req.body.name}:`,
+      category: req.body.category,
       image: {
         name: req.file.filename,
         data: fs.readFileSync(
@@ -63,7 +90,7 @@ exports.reaction_create = [
 
     reaction.save((err) => {
       if (err) return next(err);
-      res.redirect(303, '/reactions');
+      return res.redirect(303, reaction.url);
     });
   },
 ];
@@ -82,13 +109,41 @@ exports.reaction_update = [
     if (!errors.isEmpty()) {
       return res.json({ errors: errors.array() });
     }
+    next();
+  },
 
-    // Everything is fine. Save the reaction.
-    const data = new Reaction({
-      name: req.body.name,
-      type: req.body.type,
-      _id: req.params.reactionId,
+  (req, res, next) => {
+    // Check if the reaction name is already taken
+    Reaction.findOne({ name: `:${req.body.name}:` }).exec((err, reaction) => {
+      if (err) return next(err);
+      if (reaction) {
+        if (req.file) {
+          fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
+            if (err) throw err;
+          });
+        }
+
+        return res.json({
+          errors: [
+            {
+              value: '',
+              msg: 'Reaction name is already taken.',
+              param: 'name',
+              location: 'body',
+            },
+          ],
+        });
+      }
+      next();
     });
+  },
+
+  (req, res, next) => {
+  // Everything is fine. Save the reaction.
+    const data = {
+      name: `:${req.body.name}:`,
+      category: req.body.category,
+    };
 
     if (req.file) {
       data.image = {
@@ -105,11 +160,9 @@ exports.reaction_update = [
       });
     }
 
-    const reaction = new Reaction(data);
-
-    reaction.save((err) => {
+    Reaction.findByIdAndUpdate(req.params.reactionId, data, {}, (err, reaction) => {
       if (err) return next(err);
-      res.redirect(303, '/reactions');
+      res.redirect(303, reaction.url);
     });
   },
 ];

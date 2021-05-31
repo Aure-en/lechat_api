@@ -34,7 +34,10 @@ exports.user_update_username = [
     if (!errors.isEmpty()) {
       return res.json({ errors: errors.array() });
     }
+    next();
+  },
 
+  (req, res, next) => {
     // Check if the username is already taken
     User.findOne({ username: req.body.username }).exec((err, user) => {
       if (err) return next(err);
@@ -51,7 +54,10 @@ exports.user_update_username = [
         });
       }
     });
+    next();
+  },
 
+  (req, res, next) => {
     // Everything is fine. Saves username.
     User.findByIdAndUpdate(
       req.params.userId,
@@ -63,6 +69,7 @@ exports.user_update_username = [
       },
     );
   },
+
 ];
 
 exports.user_update_password = [
