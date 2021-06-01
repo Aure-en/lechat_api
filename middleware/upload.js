@@ -28,7 +28,7 @@ exports.image = multer({
   limits: { fileSize: 10 ** 7 },
 }).single('image');
 
-// Upload reaction icon (only 1 file, small image)
+// Upload emote icon (only 1 file, small image)
 exports.icon = multer({
   storage: multerStorage,
   fileFilter: multerFilter,

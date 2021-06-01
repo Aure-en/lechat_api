@@ -1,3 +1,4 @@
+const message = require('../models/message');
 const Message = require('../models/message');
 
 // List all messages in a server (GET)
@@ -52,7 +53,7 @@ exports.message_update = function (req, res, next) {
     (err, message) => {
       if (err) return next(err);
       res.redirect(303, message.url);
-    },
+    }
   );
 };
 
@@ -63,3 +64,100 @@ exports.message_delete = function (req, res, next) {
     res.redirect(303, `/channels/${message.channel}/messages`);
   });
 };
+
+// Add a reaction to the message (POST)
+exports.message_add_reaction = [
+  (req, res, next) => {
+    Message.findById(req.params.messageId, 'reaction').exec((err, result) => {
+      if (err) return next(err);
+      res.locals.message = result;
+      next();
+    });
+  },
+
+  (req, res, next) => {
+    // If the reaction is already in the message, push the user in the list of users who reacted.
+    if (
+      res.locals.message.reaction &&
+      res.locals.message.reaction.filter(
+        (reaction) => reaction.emote.toString() === req.params.emoteId
+      ).length > 0
+    ) {
+      let reactions = res.locals.message.reaction;
+      reactions = reactions.map((reaction) => {
+        if (reaction.emote.toString() === req.params.emoteId) {
+          if (!reaction.users.includes(req.user._id)) reaction.users.push(req.user._id);
+        }
+        return reaction;
+      });
+
+      Message.findByIdAndUpdate(req.params.messageId, {
+        reaction: reactions,
+      }).exec((err, updated) => {
+        if (err) return next(err);
+        return res.redirect(303, updated.url);
+      });
+    } else {
+      // Else, create the reaction field.
+      Message.findByIdAndUpdate(req.params.messageId, {
+        $push: {
+          reaction: {
+            emote: req.params.emoteId,
+            users: [req.user._id],
+          },
+        },
+      }).exec((err, updated) => {
+        if (err) return next(err);
+        res.redirect(303, updated.url);
+      });
+    }
+  },
+];
+
+// Remove a reaction from the message (DELETE)
+exports.message_delete_reaction = [
+  (req, res, next) => {
+    Message.findById(req.params.messageId, 'reaction').exec((err, result) => {
+      if (err) return next(err);
+      res.locals.message = result;
+      next();
+    });
+  },
+
+  // If the user was the only one using this emote, remove the field.
+  (req, res, next) => {
+    if (
+      res.locals.message.reaction[
+        res.locals.message.reaction.findIndex(
+          (reaction) => reaction.emote.toString() === req.params.emoteId
+        )
+      ].users.length < 2
+    ) {
+      Message.findByIdAndUpdate(req.params.messageId, {
+        $pull: { reaction: { emote: req.params.emoteId } },
+      }).exec((err, updated) => {
+        if (err) return next(err);
+        res.redirect(303, updated.url);
+      });
+    } else {
+      // Else, pull the user from the array of users using this emote
+      let reactions = res.locals.message.reaction;
+      reactions = reactions.map((reaction) => {
+        if (reaction.emote.toString() === req.params.emoteId) {
+          return {
+            emote: reaction.emote,
+            users: reaction.users.filter((user) => user.toString() !== req.user._id),
+          };
+        }
+        return reaction;
+      });
+
+      Message.findByIdAndUpdate(req.params.messageId, {
+        reaction: reactions,
+      }).exec((err, updated) => {
+        if (err) return next(err);
+        res.redirect(303, updated.url);
+      });
+    }
+  },
+];

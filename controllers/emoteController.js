@@ -1,27 +1,27 @@
 const { body, validationResult } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
-const Reaction = require('../models/reaction');
+const Emote = require('../models/emote');
 
-// List all reactions
-exports.reaction_list = function (req, res, next) {
-  Reaction.find().exec((err, reactions) => {
+// List all emotes
+exports.emote_list = function (req, res, next) {
+  Emote.find().exec((err, emotes) => {
     if (err) return next(err);
-    return res.json(reactions);
+    return res.json(emotes);
   });
 };
 
-// Detail of a specific reaction
-exports.reaction_detail = function (req, res, next) {
-  Reaction.findById(req.params.reactionId).exec((err, reaction) => {
+// Detail of a specific emote
+exports.emote_detail = function (req, res, next) {
+  Emote.findById(req.params.emoteId).exec((err, emote) => {
     if (err) return next(err);
-    if (!reaction) return res.json({ error: 'Reaction not found.' });
-    return res.json(reaction);
+    if (!emote) return res.json({ error: 'Emote not found.' });
+    return res.json(emote);
   });
 };
 
-// Create a reaction
-exports.reaction_create = [
+// Create a emote
+exports.emote_create = [
   // Validation
   body('name')
     .trim()
@@ -46,10 +46,10 @@ exports.reaction_create = [
   },
 
   (req, res, next) => {
-    // Check if the reaction name is already taken
-    Reaction.findOne({ name: `:${req.body.name}:` }).exec((err, reaction) => {
+    // Check if the emote name is already taken
+    Emote.findOne({ name: `:${req.body.name}:` }).exec((err, emote) => {
       if (err) return next(err);
-      if (reaction) {
+      if (emote) {
         fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
           if (err) throw err;
         });
@@ -58,7 +58,7 @@ exports.reaction_create = [
           errors: [
             {
               value: '',
-              msg: 'Reaction name is already taken.',
+              msg: 'Emote name is already taken.',
               param: 'name',
               location: 'body',
             },
@@ -70,8 +70,8 @@ exports.reaction_create = [
   },
 
   (req, res, next) => {
-    // Everything is fine. Save the reaction.
-    const reaction = new Reaction({
+    // Everything is fine. Save the emote.
+    const emote = new Emote({
       name: `:${req.body.name}:`,
       category: req.body.category,
       image: {
@@ -88,15 +88,15 @@ exports.reaction_create = [
       if (err) throw err;
     });
 
-    reaction.save((err) => {
+    emote.save((err) => {
       if (err) return next(err);
-      return res.redirect(303, reaction.url);
+      return res.redirect(303, emote.url);
     });
   },
 ];
 
-// Update a reaction
-exports.reaction_update = [
+// Update a emote
+exports.emote_update = [
   // Validation
   body('name')
     .trim()
@@ -113,10 +113,10 @@ exports.reaction_update = [
   },
 
   (req, res, next) => {
-    // Check if the reaction name is already taken
-    Reaction.findOne({ name: `:${req.body.name}:` }).exec((err, reaction) => {
+    // Check if the emote name is already taken
+    Emote.findOne({ name: `:${req.body.name}:` }).exec((err, emote) => {
       if (err) return next(err);
-      if (reaction) {
+      if (emote) {
         if (req.file) {
           fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
             if (err) throw err;
@@ -127,7 +127,7 @@ exports.reaction_update = [
           errors: [
             {
               value: '',
-              msg: 'Reaction name is already taken.',
+              msg: 'Emote name is already taken.',
               param: 'name',
               location: 'body',
             },
@@ -139,7 +139,7 @@ exports.reaction_update = [
   },
 
   (req, res, next) => {
-  // Everything is fine. Save the reaction.
+  // Everything is fine. Save the emote.
     const data = {
       name: `:${req.body.name}:`,
       category: req.body.category,
@@ -160,17 +160,17 @@ exports.reaction_update = [
       });
     }
 
-    Reaction.findByIdAndUpdate(req.params.reactionId, data, {}, (err, reaction) => {
+    Emote.findByIdAndUpdate(req.params.emoteId, data, {}, (err, emote) => {
       if (err) return next(err);
-      res.redirect(303, reaction.url);
+      res.redirect(303, emote.url);
     });
   },
 ];
 
-// Delete a reaction
-exports.reaction_delete = function (req, res, next) {
-  Reaction.findByIdAndRemove(req.params.reactionId, (err) => {
+// Delete a emote
+exports.emote_delete = function (req, res, next) {
+  Emote.findByIdAndRemove(req.params.emoteId, (err) => {
     if (err) return next(err);
-    res.redirect(303, '/reactions');
+    res.redirect(303, '/emotes');
   });
 };

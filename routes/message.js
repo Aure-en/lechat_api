@@ -26,4 +26,18 @@ router.delete(
   messageController.message_delete,
 );
 
+// POST to react to a message
+router.post(
+  '/:messageId/reactions/:emoteId',
+  checkAuth.check_user,
+  messageController.message_add_reaction,
+);
+
+// DELETE to remove emote from a message
+router.delete(
+  '/:messageId/reactions/:emoteId',
+  checkAuth.check_user,
+  messageController.message_delete_reaction,
+);
+
 module.exports = router;

@@ -9,6 +9,13 @@ const MessageSchema = new Schema({
   server: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
   channel: { type: Schema.Types.ObjectId, ref: 'Channel', required: true },
   edited: { type: Boolean, default: false },
+  reaction: [
+    new Schema({
+      emote: { type: Schema.Types.ObjectId, ref: 'Emote' },
+      users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+      _id: { type: String, required: true },
+    }),
+  ],
 });
 
 MessageSchema.virtual('url').get(function () {

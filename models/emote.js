@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
-const ReactionSchema = new Schema({
+const EmoteSchema = new Schema({
   name: {
     type: String,
     trim: true,
@@ -27,8 +27,8 @@ const ReactionSchema = new Schema({
   },
 });
 
-ReactionSchema.virtual('url').get(function () {
-  return `/reactions/${this._id}`;
+EmoteSchema.virtual('url').get(function () {
+  return `/emotes/${this._id}`;
 });
 
-module.exports = mongoose.model('Reaction', ReactionSchema);
+module.exports = mongoose.model('Emote', EmoteSchema);
