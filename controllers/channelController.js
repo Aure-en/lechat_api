@@ -40,7 +40,7 @@ exports.channel_create = [
       name: req.body.name,
       category: req.params.categoryId,
       server: req.params.serverId,
-      timestamp: new Date(),
+      timestamp: Date.now(),
     });
 
     channel.save((err) => {

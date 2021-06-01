@@ -44,7 +44,7 @@ exports.server_create = [
     const server = new Server({
       name: req.body.name,
       admin: req.user._id,
-      timestamp: new Date(),
+      timestamp: Date.now(),
     });
 
     async.parallel([

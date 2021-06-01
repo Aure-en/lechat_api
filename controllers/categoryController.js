@@ -38,7 +38,7 @@ exports.category_create = [
     const category = new Category({
       name: req.body.name,
       server: req.params.serverId,
-      timestamp: new Date(),
+      timestamp: Date.now(),
     });
 
     category.save((err) => {

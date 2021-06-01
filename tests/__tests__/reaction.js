@@ -98,8 +98,8 @@ describe('Add reactions', () => {
       .post(`/messages/${message._id}/reactions/${emote1._id}`)
       .set({ Authorization: `Bearer ${user.token}` })
       .redirects(1);
-    const [reaction] = res.body.reaction.filter((reaction) => reaction.emote === emote1._id);
-    expect(reaction.emote).toBe(emote1._id);
+    const [reaction] = res.body.reaction.filter((reaction) => reaction.emote._id === emote1._id);
+    expect(reaction.emote._id).toBe(emote1._id);
     expect(reaction.users).toEqual(expect.arrayContaining([user.user._id]));
     done();
   });
@@ -110,8 +110,8 @@ describe('Add reactions', () => {
       .post(`/messages/${message._id}/reactions/${emote1._id}`)
       .set({ Authorization: `Bearer ${admin.token}` })
       .redirects(1);
-    const [reaction] = res.body.reaction.filter((reaction) => reaction.emote === emote1._id);
-    expect(reaction.emote).toBe(emote1._id);
+    const [reaction] = res.body.reaction.filter((reaction) => reaction.emote._id === emote1._id);
+    expect(reaction.emote._id).toBe(emote1._id);
     expect(reaction.users).toEqual(expect.arrayContaining([user.user._id, admin.user._id]));
     done();
   });
@@ -123,9 +123,9 @@ describe('Add reactions', () => {
       .set({ Authorization: `Bearer ${user.token}` })
       .redirects(1);
     const [reaction1, reaction2] = res.body.reaction;
-    expect(reaction1.emote).toBe(emote1._id);
+    expect(reaction1.emote._id).toBe(emote1._id);
     expect(reaction1.users).toEqual(expect.arrayContaining([user.user._id]));
-    expect(reaction2.emote).toBe(emote2._id);
+    expect(reaction2.emote._id).toBe(emote2._id);
     expect(reaction2.users).toEqual(expect.arrayContaining([user.user._id]));
     done();
   });
@@ -150,7 +150,7 @@ describe('Remove reactions', () => {
       .delete(`/messages/${message._id}/reactions/${emote1._id}`)
       .set({ Authorization: `Bearer ${user.token}` })
       .redirects(1);
-    const [reaction] = res.body.reaction.filter((reaction) => reaction.emote === emote1._id);
+    const [reaction] = res.body.reaction.filter((reaction) => reaction.emote._id === emote1._id);
     expect(reaction.users.length).toBe(1);
     done();
   });

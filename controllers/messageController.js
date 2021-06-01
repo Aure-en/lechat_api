@@ -1,31 +1,87 @@
-const message = require('../models/message');
 const Message = require('../models/message');
+
+// Helper functions to search for specific messages
+const setQueries = (options) => {
+  const queries = {};
+  const {
+    search, channel, author, before, after, file,
+  } = options;
+
+  if (search) {
+    queries.text = { $regex: options.search, $options: 'i' };
+  }
+
+  if (author) {
+    queries.author = options.author;
+  }
+
+  if (channel) {
+    queries.channel = options.channel;
+  }
+
+  if (after) {
+    queries.timestamp = { $gt: options.after };
+  }
+
+  if (before) {
+    queries.timestamp = { $lt: options.before };
+  }
+
+  if (file) {
+    queries.file = { $exists: true };
+  }
+  return queries;
+};
 
 // List all messages in a server (GET)
 exports.message_list_server = function (req, res, next) {
-  Message.find({ server: req.params.serverId }).exec((err, messages) => {
-    if (err) return next(err);
-    return res.json(messages);
-  });
+  Message.find({ server: req.params.serverId, ...setQueries(req.query) })
+    .populate('author')
+    .populate({
+      path: 'reaction',
+      populate: {
+        path: 'emote',
+        model: 'Emote',
+      },
+    }).exec((err, messages) => {
+      if (err) return next(err);
+      return res.json(messages);
+    });
 };
 
 // List all messages in a channel (GET)
 exports.message_list_channel = function (req, res, next) {
-  Message.find({ channel: req.params.channelId }).exec((err, messages) => {
-    if (err) return next(err);
-    return res.json(messages);
-  });
+  Message.find({ channel: req.params.channelId })
+    .populate('author')
+    .populate({
+      path: 'reaction',
+      populate: {
+        path: 'emote',
+        model: 'Emote',
+      },
+    }).exec((err, messages) => {
+      if (err) return next(err);
+      return res.json(messages);
+    });
 };
 
 // Details of a specific message (GET)
 exports.message_detail = function (req, res, next) {
-  Message.findById(req.params.messageId).exec((err, message) => {
-    if (err) return next(err);
-    if (!message) {
-      return res.json({ error: 'Message not found.' });
-    }
-    return res.json(message);
-  });
+  Message.findById(req.params.messageId)
+    .populate('author')
+    .populate({
+      path: 'reaction',
+      populate: {
+        path: 'emote',
+        model: 'Emote',
+      },
+    }).exec((err, message) => {
+      if (err) return next(err);
+      if (!message) {
+        return res.json({ error: 'Message not found.' });
+      }
+      return res.json(message);
+    });
 };
 
 // Create a message (POST)
@@ -33,7 +89,7 @@ exports.message_create = function (req, res, next) {
   const message = new Message({
     author: req.user._id,
     text: req.body.text,
-    timestamp: new Date(),
+    timestamp: Date.now(),
     server: req.params.serverId,
     channel: req.params.channelId,
   });
@@ -53,7 +109,7 @@ exports.message_update = function (req, res, next) {
     (err, message) => {
       if (err) return next(err);
       res.redirect(303, message.url);
-    }
+    },
   );
 };
 
@@ -78,9 +134,9 @@ exports.message_add_reaction = [
   (req, res, next) => {
     // If the reaction is already in the message, push the user in the list of users who reacted.
     if (
-      res.locals.message.reaction &&
-      res.locals.message.reaction.filter(
-        (reaction) => reaction.emote.toString() === req.params.emoteId
+      res.locals.message.reaction
+      && res.locals.message.reaction.filter(
+        (reaction) => reaction.emote.toString() === req.params.emoteId,
       ).length > 0
     ) {
       let reactions = res.locals.message.reaction;
@@ -129,7 +185,7 @@ exports.message_delete_reaction = [
     if (
       res.locals.message.reaction[
         res.locals.message.reaction.findIndex(
-          (reaction) => reaction.emote.toString() === req.params.emoteId
+          (reaction) => reaction.emote.toString() === req.params.emoteId,
         )
       ].users.length < 2
     ) {
@@ -161,3 +217,4 @@ exports.message_delete_reaction = [
     }
   },
 ];
+
