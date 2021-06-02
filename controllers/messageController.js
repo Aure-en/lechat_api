@@ -33,9 +33,21 @@ const setQueries = (options) => {
   return queries;
 };
 
+const setPagination = (options) => {
+  const { last_key } = options;
+  if (last_key) return { _id: { $lt: last_key } };
+};
+
 // List all messages in a server (GET)
 exports.message_list_server = function (req, res, next) {
-  Message.find({ server: req.params.serverId, ...setQueries(req.query) })
+  const limit = req.query.limit || 100;
+  Message.find({
+    server: req.params.serverId,
+    ...setQueries(req.query),
+    ...setPagination(req.query),
+  })
+    .sort({ timestamp: -1 })
+    .limit(limit)
     .populate('author')
     .populate({
       path: 'reaction',
@@ -43,7 +55,8 @@ exports.message_list_server = function (req, res, next) {
         path: 'emote',
         model: 'Emote',
       },
-    }).exec((err, messages) => {
+    })
+    .exec((err, messages) => {
       if (err) return next(err);
       return res.json(messages);
     });
@@ -51,7 +64,10 @@ exports.message_list_server = function (req, res, next) {
 
 // List all messages in a channel (GET)
 exports.message_list_channel = function (req, res, next) {
-  Message.find({ channel: req.params.channelId })
+  const limit = req.query.limit || 100;
+  Message.find({ channel: req.params.channelId, ...setPagination(req.query) })
+    .sort({ timestamp: -1 })
+    .limit(limit)
     .populate('author')
     .populate({
       path: 'reaction',
@@ -59,7 +75,8 @@ exports.message_list_channel = function (req, res, next) {
         path: 'emote',
         model: 'Emote',
       },
-    }).exec((err, messages) => {
+    })
+    .exec((err, messages) => {
       if (err) return next(err);
       return res.json(messages);
     });
@@ -75,7 +92,8 @@ exports.message_detail = function (req, res, next) {
         path: 'emote',
         model: 'Emote',
       },
-    }).exec((err, message) => {
+    })
+    .exec((err, message) => {
       if (err) return next(err);
       if (!message) {
         return res.json({ error: 'Message not found.' });
@@ -202,7 +220,9 @@ exports.message_delete_reaction = [
         if (reaction.emote.toString() === req.params.emoteId) {
           return {
             emote: reaction.emote,
-            users: reaction.users.filter((user) => user.toString() !== req.user._id),
+            users: reaction.users.filter(
+              (user) => user.toString() !== req.user._id,
+            ),
           };
         }
         return reaction;
@@ -217,4 +237,3 @@ exports.message_delete_reaction = [
     }
   },
 ];
-
