@@ -47,8 +47,8 @@ exports.message_list_server = function (req, res, next) {
     ...setPagination(req.query),
   })
     .sort({ timestamp: -1 })
-    .limit(limit)
-    .populate('author')
+    .limit(limit * 1) // Convert to number
+    .populate('author', 'username _id')
     .populate({
       path: 'reaction',
       populate: {
@@ -67,7 +67,7 @@ exports.message_list_channel = function (req, res, next) {
   const limit = req.query.limit || 100;
   Message.find({ channel: req.params.channelId, ...setPagination(req.query) })
     .sort({ timestamp: -1 })
-    .limit(limit)
+    .limit(limit * 1) // Convert to number
     .populate('author')
     .populate({
       path: 'reaction',
