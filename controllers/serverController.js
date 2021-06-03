@@ -6,6 +6,7 @@ const Server = require('../models/server');
 const User = require('../models/user');
 const Message = require('../models/message');
 const Channel = require('../models/channel');
+const queries = require('../utils/queries');
 
 // List of all servers (GET)
 exports.server_list = function (req, res, next) {
@@ -22,6 +23,30 @@ exports.server_detail = function (req, res, next) {
     if (!server) return res.json({ error: 'Server not found' });
     return res.json(server);
   });
+};
+
+// List all messages in a server (GET)
+exports.server_messages = function (req, res, next) {
+  const limit = req.query.limit || 100;
+  Message.find({
+    server: req.params.serverId,
+    ...queries.setQueries(req.query),
+    ...queries.setPagination(req.query),
+  })
+    .sort({ timestamp: -1 })
+    .limit(limit * 1) // Convert to number
+    .populate('author', 'username _id')
+    .populate({
+      path: 'reaction',
+      populate: {
+        path: 'emote',
+        model: 'Emote',
+      },
+    })
+    .exec((err, messages) => {
+      if (err) return next(err);
+      return res.json(messages);
+    });
 };
 
 // Create a server (POST)

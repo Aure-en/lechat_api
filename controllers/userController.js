@@ -53,8 +53,8 @@ exports.user_update_username = [
           ],
         });
       }
+      next();
     });
-    next();
   },
 
   (req, res, next) => {

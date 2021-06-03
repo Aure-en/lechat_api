@@ -6,8 +6,9 @@ const MessageSchema = new Schema({
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   text: { type: String, required: true },
   timestamp: { type: Number, required: true },
-  server: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
-  channel: { type: Schema.Types.ObjectId, ref: 'Channel', required: true },
+  server: { type: Schema.Types.ObjectId, ref: 'Server' },
+  channel: { type: Schema.Types.ObjectId, ref: 'Channel' },
+  conversation: { type: Schema.Types.ObjectId, ref: 'Conversation' },
   edited: { type: Boolean, default: false },
   reaction: [
     new Schema({

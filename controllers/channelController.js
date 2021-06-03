@@ -1,5 +1,7 @@
 const { body, validationResult } = require('express-validator');
 const Channel = require('../models/channel');
+const Message = require('../models/message');
+const queries = require('../utils/queries');
 
 // List all channels of a category (GET)
 exports.channel_list = function (req, res, next) {
@@ -14,10 +16,30 @@ exports.channel_detail = function (req, res, next) {
   Channel.findById(req.params.channelId).exec((err, channel) => {
     if (err) return next(err);
     if (!channel) {
-      return res.json({ error: 'Channel not found.' });
+      return res.status(404).json({ error: 'Channel not found.' });
     }
     return res.json(channel);
   });
+};
+
+// List all messages in a channel (GET)
+exports.channel_messages = function (req, res, next) {
+  const limit = req.query.limit || 100;
+  Message.find({ channel: req.params.channelId, ...queries.setPagination(req.query) })
+    .sort({ timestamp: -1 })
+    .limit(limit * 1) // Convert to number
+    .populate('author')
+    .populate({
+      path: 'reaction',
+      populate: {
+        path: 'emote',
+        model: 'Emote',
+      },
+    })
+    .exec((err, messages) => {
+      if (err) return next(err);
+      return res.json(messages);
+    });
 };
 
 // Create a channel (POST)
@@ -54,7 +76,10 @@ exports.channel_create = [
 exports.channel_update = [
   // Validation
   body('name', 'Name must be specified.').trim().isLength({ min: 1 }).escape(),
-  body('category', 'Category must be speficied.').trim().isLength({ min: 1 }).escape(),
+  body('category', 'Category must be speficied.')
+    .trim()
+    .isLength({ min: 1 })
+    .escape(),
 
   (req, res, next) => {
     // check for errors

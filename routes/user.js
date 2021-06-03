@@ -2,6 +2,7 @@ const express = require('express');
 const checkAuth = require('../auth/checkAuth');
 const userController = require('../controllers/userController');
 const friendController = require('../controllers/friendController');
+const conversationController = require('../controllers/conversationController');
 const upload = require('../middleware/upload');
 
 const router = express.Router({ mergeParams: true });
@@ -22,6 +23,9 @@ router.use(
   checkAuth.check_user,
   checkAuth.check_user_id,
 );
+
+// GET a user conversations
+router.get('/:userId/conversations', conversationController.conversation_list);
 
 // PUT to update an user details
 router.put(

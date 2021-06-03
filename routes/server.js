@@ -29,7 +29,7 @@ router.post(
 router.get('/:serverId/categories', categoryController.category_list);
 
 // GET the server messages
-router.get('/:serverId/messages', messageController.message_list_server);
+router.get('/:serverId/messages', serverController.server_messages);
 
 // GET a specific server
 router.get('/:serverId', serverController.server_detail);

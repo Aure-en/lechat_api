@@ -27,6 +27,6 @@ router.delete(
 );
 
 // GET to read all the messages in a channel
-router.get('/:channelId/messages', messageController.message_list_channel);
+router.get('/:channelId/messages', channelController.channel_messages);
 
 module.exports = router;
