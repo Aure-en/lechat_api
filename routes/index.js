@@ -7,6 +7,7 @@ const messageRouter = require('./message');
 const userRouter = require('./user');
 const friendRouter = require('./friend');
 const emoteRouter = require('./emote');
+const conversationRouter = require('./conversation');
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.use('/messages', messageRouter);
 router.use('/users', userRouter);
 router.use('/friends', friendRouter);
 router.use('/emotes', emoteRouter);
+router.use('/conversations', conversationRouter);
 
 module.exports = router;

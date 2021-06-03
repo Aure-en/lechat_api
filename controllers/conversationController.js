@@ -12,6 +12,15 @@ exports.conversation_detail = function (req, res, next) {
   });
 };
 
+// Check existence of a conversation containing those members
+exports.conversation_existence = function (req, res, next) {
+  const members = req.query.members.split(',');
+  Conversation.findOne({ members }).exec((err, conversation) => {
+    if (err) return next(err);
+    return res.json(conversation);
+  });
+};
+
 // List all the conversations of a specific user (GET)
 exports.conversation_list = function (req, res, next) {
   Conversation.find({ members: req.user._id }, '_id').exec(
@@ -50,7 +59,9 @@ exports.conversation_messages = function (req, res, next) {
 exports.conversation_create = [
   // Validation
   body('members').custom((value) => {
-    if (JSON.parse(value).length < 2) {
+    // Remove duplicate and make an array
+    const members = Array.from(new Set(JSON.parse(value)));
+    if (members.length < 2) {
       throw new Error('There must be at least two users in the conversation');
     }
     return true;
@@ -61,7 +72,21 @@ exports.conversation_create = [
     if (!errors.isEmpty()) {
       return res.json({ errors: errors.array() });
     }
+    next();
+  },
 
+  // Check if the conversation already exists
+  (req, res, next) => {
+    Conversation.findOne({
+      members: Array.from(new Set(JSON.parse(req.body.members))),
+    }).exec((err, conversation) => {
+      if (err) return next(err);
+      if (conversation) return res.json(conversation);
+      next();
+    });
+  },
+
+  (req, res, next) => {
     // No errors, save the conversation
     const conversation = new Conversation({
       members: JSON.parse(req.body.members),

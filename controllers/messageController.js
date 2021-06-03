@@ -3,7 +3,7 @@ const Message = require('../models/message');
 // Details of a specific message (GET)
 exports.message_detail = function (req, res, next) {
   Message.findById(req.params.messageId)
-    .populate('author')
+    .populate('author', 'username')
     .populate({
       path: 'reaction',
       populate: {
@@ -22,13 +22,20 @@ exports.message_detail = function (req, res, next) {
 
 // Create a message (POST)
 exports.message_create = function (req, res, next) {
-  const message = new Message({
+  const data = {
     author: req.user._id,
     text: req.body.text,
     timestamp: Date.now(),
-    server: req.params.serverId,
-    channel: req.params.channelId,
-  });
+  };
+
+  if (req.params.serverId && req.params.channelId) {
+    data.server = req.params.serverId;
+    data.channel = req.params.channelId;
+  } else if (req.params.conversationId) {
+    data.conversation = req.params.conversationId;
+  }
+
+  const message = new Message(data);
 
   message.save((err) => {
     if (err) return next(err);
