@@ -64,22 +64,37 @@ exports.server_create = [
     next();
   },
 
-  // Form is valid. Save the server.
+  // Form is valid.
   (req, res, next) => {
-    const server = new Server({
+    const data = {
       name: req.body.name,
       admin: req.user._id,
       timestamp: Date.now(),
-    });
+    };
+
+    // Add image field if there is an image
+    if (req.file) {
+      data.icon = {
+        name: req.file.filename,
+        data: fs.readFileSync(path.join(__dirname, `../temp/${req.file.filename}`)),
+        contentType: req.file.mimetype,
+      };
+      // Delete the image from the disk after using it
+      fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
+        if (err) throw err;
+      });
+    }
+
+    const server = new Server(data);
 
     async.parallel([
       // Save the server
-      function(callback) {
+      function (callback) {
         server.save(callback);
       },
 
       // Add the server to the user's server list
-      function(callback) {
+      function (callback) {
         User.findByIdAndUpdate(
           req.user._id,
           { $push: { server: server._id } },

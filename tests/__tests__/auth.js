@@ -71,7 +71,7 @@ describe('Log in', () => {
   test('Login validation sends back errors if not all fields are filled', async (done) => {
     const res = await request(app).post('/auth/login').send({});
     expect(
-      res.body.errors.filter((error) => error.msg.match(/email must be specified/i)).length,
+      res.body.errors.filter((error) => error.msg.match(/email \/ username must be specified/i)).length,
     ).toBe(1);
     expect(
       res.body.errors.filter((error) => error.msg.match(/password must be specified/i)).length,
@@ -82,7 +82,7 @@ describe('Log in', () => {
   test('Error is sent if user does not exist', async (done) => {
     const res = await request(app)
       .post('/auth/login')
-      .send({ email: 'Unknown@user.com', password: 'Unknown' });
+      .send({ identifier: 'Unknown@user.com', password: 'Unknown' });
     expect(
       res.body.errors.filter((error) => error.msg.match(/incorrect username\/email/i))
         .length,
@@ -92,7 +92,7 @@ describe('Log in', () => {
 
   test('User can login if all required fields are filled', async (done) => {
     const res = await request(app).post('/auth/login').send({
-      email: user.email,
+      identifier: user.email,
       password: user.password,
     });
 

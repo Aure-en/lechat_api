@@ -7,12 +7,9 @@ const User = require('../models/user');
 
 // POST Login
 exports.auth_login = [
-  body('email')
+  body('identifier', 'Email / Username must be specified.')
     .trim()
-    .isLength({ min: 1 })
-    .withMessage('Email must be specified')
-    .isEmail()
-    .withMessage('Invalid email.'),
+    .isLength({ min: 1 }),
   body('password', 'Password must be specified').trim().isLength({ min: 1 }),
 
   (req, res, next) => {
