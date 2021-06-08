@@ -7,8 +7,18 @@ const queries = require('../utils/queries');
 exports.conversation_detail = function (req, res, next) {
   Conversation.findById(req.params.conversationId).exec((err, conversation) => {
     if (err) return next(err);
-    if (!conversation) return res.status(404).json({ error: 'Conversation not found. ' });
+    if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
     return res.json(conversation);
+  });
+};
+
+// Check if the user can access the permission
+exports.conversation_permission = function (req, res, next) {
+  Conversation.findById(req.params.conversationId, 'members').exec((err, conversation) => {
+    if (err) return next(err);
+    if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
+    if (!conversation.members.includes(req.user._id)) return res.status(403).json({ error: 'You cannot access this conversation.' });
+    next();
   });
 };
 

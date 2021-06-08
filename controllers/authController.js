@@ -1,4 +1,5 @@
 const { body, validationResult } = require('express-validator');
+const async = require('async');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const bcrypt = require('bcryptjs');
@@ -63,24 +64,50 @@ exports.auth_signup = [
     return next();
   },
 
-  // Check if email is already taken
+  // Check if email or username is already taken
   (req, res, next) => {
-    User.findOne({ email: req.body.email }).exec((err, user) => {
-      if (err) return next(err);
-      if (user) {
-        return res.json({
-          errors: [
-            {
-              value: '',
-              msg: 'Email is already taken.',
-              param: 'email',
-              location: 'body',
-            },
-          ],
+    const errors = [];
+
+    async.parallel([
+      function (callback) {
+        User.findOne({ email: req.body.email }).exec((err, user) => {
+          if (err) return next(err);
+          if (user) {
+            errors.push(
+              {
+                value: '',
+                msg: 'Email is already taken.',
+                param: 'email',
+                location: 'body',
+              },
+            );
+          }
+          callback();
         });
+      },
+
+      function (callback) {
+        User.findOne({ username: req.body.username }).exec((err, user) => {
+          if (err) return next(err);
+          if (user) {
+            errors.push(
+              {
+                value: '',
+                msg: 'Username is already taken.',
+                param: 'username',
+                location: 'body',
+              },
+            );
+          }
+          callback();
+        });
+      },
+    ], () => {
+      if (errors.length > 0) {
+        return res.json({ errors });
       }
+      return next();
     });
-    return next();
   },
 
   // Everything is fine, save the user.

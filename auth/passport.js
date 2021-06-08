@@ -13,13 +13,13 @@ passport.use(
       usernameField: 'email',
       passwordField: 'password',
     },
-    (email, password, done) => {
-      User.findOne({ email }, (err, user) => {
+    (identity, password, done) => {
+      User.findOne({ $or: [{ email: identity }, { username: identity }] }, (err, user) => {
         if (err) {
           return done(err);
         }
         if (!user) {
-          return done(null, false, { message: 'Incorrect email.' });
+          return done(null, false, { message: 'Incorrect username/email.' });
         }
 
         bcrypt.compare(password, user.password, (err, res) => {

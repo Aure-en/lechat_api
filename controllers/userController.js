@@ -14,7 +14,21 @@ exports.user_detail = function (req, res, next) {
   ).exec((err, user) => {
     if (err) return next(err);
     if (!user) {
-      res.json({ error: 'User not found. ' });
+      res.json({ error: 'User not found.' });
+    }
+    return res.json(user);
+  });
+};
+
+// List user servers (GET)
+exports.user_server = function (req, res, next) {
+  User.findOne(
+    { _id: req.params.userId },
+    'server',
+  ).exec((err, user) => {
+    if (err) return next(err);
+    if (!user) {
+      res.json({ error: 'User not found.' });
     }
     return res.json(user);
   });

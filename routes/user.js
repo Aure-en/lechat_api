@@ -24,6 +24,9 @@ router.use(
   checkAuth.check_user_id,
 );
 
+// GET user servers
+router.get('/:userId/servers', userController.user_server);
+
 // GET a user conversations
 router.get('/:userId/conversations', conversationController.conversation_list);
 

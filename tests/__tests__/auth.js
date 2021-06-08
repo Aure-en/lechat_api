@@ -12,6 +12,16 @@ const user = {
 };
 
 describe('Sign up', () => {
+  beforeAll(async (done) => {
+    // Create a user so its username and email are already taken.
+    await request(app).post('/auth/signup').send({
+      username: 'Taken',
+      email: 'taken@taken.com',
+      password: 'taken_password',
+    });
+    done();
+  });
+
   test('Sign up validation sends back errors if not all fields are filled', async (done) => {
     const res = await request(app).post('/auth/signup').send({});
     expect(
@@ -35,6 +45,26 @@ describe('Sign up', () => {
     expect(typeof res.body.token).toBe('string');
     done();
   });
+
+  test('Two users cannot have the same email', async (done) => {
+    const res = await request(app).post('/auth/signup').send({
+      username: 'Random',
+      email: 'taken@taken.com', // This email is taken
+      password: 'random_password',
+    });
+    expect(res.body.errors.filter((err) => err.msg.match(/email is already taken/i)).length).toBe(1);
+    done();
+  });
+
+  test('Two users cannot have the same username', async (done) => {
+    const res = await request(app).post('/auth/signup').send({
+      username: 'Taken', // This username is taken
+      email: 'randomuser@gmail.com',
+      password: 'random_password',
+    });
+    expect(res.body.errors.filter((err) => err.msg.match(/username is already taken/i)).length).toBe(1);
+    done();
+  });
 });
 
 describe('Log in', () => {
@@ -54,7 +84,7 @@ describe('Log in', () => {
       .post('/auth/login')
       .send({ email: 'Unknown@user.com', password: 'Unknown' });
     expect(
-      res.body.errors.filter((error) => error.msg.match(/incorrect email/i))
+      res.body.errors.filter((error) => error.msg.match(/incorrect username\/email/i))
         .length,
     ).toBe(1);
     done();
