@@ -214,7 +214,7 @@ exports.user_update_email = [
   (req, res, next) => {
     User.findOne({ email: req.body.email }).exec((err, user) => {
       if (err) return next(err);
-      if (user) {
+      if (user && user._id.toString() !== req.user._id) {
         return res.json({
           errors: [
             {
@@ -226,8 +226,8 @@ exports.user_update_email = [
           ],
         });
       }
+      next();
     });
-    next();
   },
 
   (req, res, next) => {

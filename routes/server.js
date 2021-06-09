@@ -14,7 +14,7 @@ router.get('/', serverController.server_list);
 // POST to create a new server
 router.post(
   '/',
-  upload.image,
+  upload.icon,
   checkAuth.check_user,
   serverController.server_create,
 );

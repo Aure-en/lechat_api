@@ -76,7 +76,7 @@ exports.channel_create = [
 exports.channel_update = [
   // Validation
   body('name', 'Name must be specified.').trim().isLength({ min: 1 }).escape(),
-  body('category', 'Category must be speficied.')
+  body('category', 'Category must be specified.')
     .trim()
     .isLength({ min: 1 })
     .escape(),
