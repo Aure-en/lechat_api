@@ -7,6 +7,9 @@ const upload = require('../middleware/upload');
 
 const router = express.Router({ mergeParams: true });
 
+// GET to search for an user
+router.get('/', userController.user_search);
+
 // GET a specific user detail
 router.get('/:userId', userController.user_detail);
 

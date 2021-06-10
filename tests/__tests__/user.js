@@ -19,10 +19,18 @@ beforeAll(async (done) => {
 });
 afterAll(async () => dbDisconnect());
 
-test('User informations can be read', async (done) => {
-  const res = await request(app).get(`/users/${user.user._id}`);
-  expect(res.body.username).toBe(user.user.username);
-  done();
+describe('Search for an user', () => {
+  test('User can be searched from their username', async (done) => {
+    const res = await request(app).get(`/users?search=${user.user.username}`);
+    expect(res.body.username).toBe(user.user.username);
+    done();
+  });
+
+  test('User can be searched from their email', async (done) => {
+    const res = await request(app).get(`/users?search=${user.user.email}`);
+    expect(res.body.username).toBe(user.user.username);
+    done();
+  });
 });
 
 describe('Server update', () => {
@@ -114,7 +122,7 @@ describe('Username update', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ username: 'Renamed' })
+      .send({ username: 'Renamed', password: 'user_password' })
       .redirects(1);
     expect(res.body.username).toBe('Renamed');
     done();

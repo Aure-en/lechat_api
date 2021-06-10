@@ -20,12 +20,21 @@ exports.user_detail = function (req, res, next) {
   });
 };
 
+// Search for a user from their username or email (GET)
+exports.user_search = function (req, res, next) {
+  if (!req.query.search) return res.json({ error: 'Search query must not be empty.' });
+  User.findOne({
+    $or: [{ username: req.query.search }, { email: req.query.search }],
+  }).exec((err, user) => {
+    if (err) return next(err);
+    if (!user) return res.json({ error: 'User not found.' });
+    return res.json(user);
+  });
+};
+
 // List user servers (GET)
 exports.user_server = function (req, res, next) {
-  User.findOne(
-    { _id: req.params.userId },
-    'server',
-  ).exec((err, user) => {
+  User.findOne({ _id: req.params.userId }, 'server').exec((err, user) => {
     if (err) return next(err);
     if (!user) {
       res.json({ error: 'User not found.' });
@@ -51,11 +60,30 @@ exports.user_update_username = [
     next();
   },
 
+  // Check password
+  (req, res, next) => {
+    bcrypt.compare(req.body.password, req.user.password, (err, response) => {
+      if (response) {
+        return next();
+      }
+      return res.json({
+        errors: [
+          {
+            value: '',
+            msg: 'Incorrect password.',
+            param: 'password',
+            location: 'body',
+          },
+        ],
+      });
+    });
+  },
+
   (req, res, next) => {
     // Check if the username is already taken
     User.findOne({ username: req.body.username }).exec((err, user) => {
       if (err) return next(err);
-      if (user) {
+      if (user && user._id.toString() !== req.user._id) {
         return res.json({
           errors: [
             {
@@ -83,7 +111,6 @@ exports.user_update_username = [
       },
     );
   },
-
 ];
 
 exports.user_update_password = [
@@ -245,6 +272,7 @@ exports.user_update_email = [
 ];
 
 exports.user_update_avatar = (req, res, next) => {
+  console.log(req.file);
   if (req.file) {
     // Temporarily saves the image and extracts the data
     const avatar = {
