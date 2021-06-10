@@ -23,31 +23,46 @@ exports.friend_list_pending = function (req, res, next) {
 };
 
 // Send a friend request
-exports.friend_add = function (req, res, next) {
+exports.friend_add = [
+  // Sender cannot send a request to themselves
+  (req, res, next) => {
+    if (req.user._id.toString() === req.params.userId) {
+      return res.json({
+        error: 'You cannot send a friend request to yourself.',
+      });
+    }
+    next();
+  },
+
+  (req, res, next) => {
   // Check if the user already sent a request to that user
-  Friend.findOne({ sender: req.user._id, recipient: req.params.userId }).exec(
-    (err, friend) => {
-      if (err) return next(err);
-      if (friend) {
-        return res.json({
-          error: 'You have already sent this person a friend request.',
-        });
-      }
-    },
-  );
+    Friend.findOne({ sender: req.user._id, recipient: req.params.userId }).exec(
+      (err, friend) => {
+        if (err) return next(err);
+        if (friend) {
+          return res.json({
+            error: 'You have already sent this person a friend request.',
+          });
+        }
+        next();
+      },
+    );
+  },
 
+  (req, res, next) => {
   // If not, send the request.
-  const request = new Friend({
-    sender: req.user._id,
-    recipient: req.params.userId,
-    status: false,
-  });
+    const request = new Friend({
+      sender: req.user._id,
+      recipient: req.params.userId,
+      status: false,
+    });
 
-  request.save((err) => {
-    if (err) return next(err);
-    res.redirect(303, `/users/${req.user._id}/pending`);
-  });
-};
+    request.save((err) => {
+      if (err) return next(err);
+      res.redirect(303, `/users/${req.user._id}/pending`);
+    });
+  },
+];
 
 // Accept a friend request
 exports.friend_accept = [

@@ -42,6 +42,16 @@ describe('Sending a friend request', () => {
     done();
   });
 
+  test('A user cannot befriend themselves', async (done) => {
+    const res = await request(app)
+      .post(`/users/${sender.user._id}/friends`)
+      .set({
+        Authorization: `Bearer ${sender.token}`,
+      });
+    expect(res.body.error).toBe('You cannot send a friend request to yourself.');
+    done();
+  });
+
   test('A registered user can send a friend request to another user', async (done) => {
     // Send friend request
     const res = await request(app)
