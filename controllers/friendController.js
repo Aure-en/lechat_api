@@ -5,10 +5,12 @@ exports.friend_list = function (req, res, next) {
   Friend.find({
     status: true,
     $or: [{ sender: req.params.userId }, { recipient: req.params.userId }],
-  }).exec((err, friends) => {
-    if (err) return next(err);
-    return res.json(friends);
-  });
+  })
+    .populate('sender recipient', '-password -server')
+    .exec((err, friends) => {
+      if (err) return next(err);
+      return res.json(friends);
+    });
 };
 
 // List all pending friend requests
@@ -16,10 +18,12 @@ exports.friend_list_pending = function (req, res, next) {
   Friend.find({
     status: false,
     $or: [{ sender: req.params.userId }, { recipient: req.params.userId }],
-  }).exec((err, friends) => {
-    if (err) return next(err);
-    return res.json(friends);
-  });
+  })
+    .populate('sender recipient', '-password -server')
+    .exec((err, friends) => {
+      if (err) return next(err);
+      return res.json(friends);
+    });
 };
 
 // Send a friend request
@@ -35,7 +39,7 @@ exports.friend_add = [
   },
 
   (req, res, next) => {
-  // Check if the user already sent a request to that user
+    // Check if the user already sent a request to that user
     Friend.findOne({ sender: req.user._id, recipient: req.params.userId }).exec(
       (err, friend) => {
         if (err) return next(err);
@@ -45,12 +49,12 @@ exports.friend_add = [
           });
         }
         next();
-      },
+      }
     );
   },
 
   (req, res, next) => {
-  // If not, send the request.
+    // If not, send the request.
     const request = new Friend({
       sender: req.user._id,
       recipient: req.params.userId,
@@ -78,6 +82,7 @@ exports.friend_accept = [
       next();
     });
   },
+
   (req, res, next) => {
     Friend.findByIdAndUpdate(
       req.params.friendId,
@@ -86,7 +91,7 @@ exports.friend_accept = [
       (err) => {
         if (err) return next(err);
         res.redirect(303, `/users/${req.user._id}/friends`);
-      },
+      }
     );
   },
 ];
@@ -98,8 +103,8 @@ exports.friend_delete = [
     Friend.findById(req.params.friendId).exec((err, friend) => {
       if (err) return next(err);
       if (
-        req.user._id !== friend.sender.toString()
-        && req.user._id !== friend.recipient.toString()
+        req.user._id !== friend.sender.toString() &&
+        req.user._id !== friend.recipient.toString()
       ) {
         return res.status(403).json({
           error: 'You do not have permission to perform this operation.',

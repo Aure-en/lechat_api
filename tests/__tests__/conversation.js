@@ -66,27 +66,37 @@ describe('Conversation creation', () => {
 });
 
 describe('Find conversations', () => {
+  let conversation;
   beforeAll(async (done) => {
-    await request(app)
+    const res = await request(app)
       .post('/conversations')
       .set({
         Authorization: `Bearer ${user1.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ members: `["${user1.user._id}", "${user2.user._id}"]` });
+      .send({ members: `["${user1.user._id}", "${user2.user._id}"]` })
+      .redirects(1);
+    conversation = res.body;
     done();
   });
 
-  test('A conversation can be found from its members', async (done) => {
+  test.only('A conversation can be found from its members', async (done) => {
     const res = await request(app)
       .get(`/conversations?members=${user1.user._id},${user2.user._id}`)
       .set({
         Authorization: `Bearer ${user1.token}`,
         'Content-Type': 'application/json',
       });
-    expect(res.body.members).toEqual(
-      expect.arrayContaining([user1.user._id, user2.user._id]),
-    );
+    expect(res.body._id).toBe(conversation._id);
+
+    // Check that the members order does not matter
+    const res2 = await request(app)
+      .get(`/conversations?members=${user2.user._id},${user1.user._id}`)
+      .set({
+        Authorization: `Bearer ${user1.token}`,
+        'Content-Type': 'application/json',
+      });
+    expect(res2.body._id).toBe(conversation._id);
     done();
   });
 

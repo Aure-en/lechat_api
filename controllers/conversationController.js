@@ -5,30 +5,40 @@ const queries = require('../utils/queries');
 
 // List a conversation informations
 exports.conversation_detail = function (req, res, next) {
-  Conversation.findById(req.params.conversationId).exec((err, conversation) => {
-    if (err) return next(err);
-    if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
-    return res.json(conversation);
-  });
+  Conversation.findById(req.params.conversationId)
+    .populate('members', '-password -server -email')
+    .exec((err, conversation) => {
+      if (err) return next(err);
+      if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
+      return res.json(conversation);
+    });
 };
 
 // Check if the user can access the permission
 exports.conversation_permission = function (req, res, next) {
-  Conversation.findById(req.params.conversationId, 'members').exec((err, conversation) => {
-    if (err) return next(err);
-    if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
-    if (!conversation.members.includes(req.user._id)) return res.status(403).json({ error: 'You cannot access this conversation.' });
-    next();
-  });
+  Conversation.findById(req.params.conversationId, 'members').exec(
+    (err, conversation) => {
+      if (err) return next(err);
+      if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
+      if (!conversation.members.includes(req.user._id)) {
+        return res
+          .status(403)
+          .json({ error: 'You cannot access this conversation.' });
+      }
+      next();
+    },
+  );
 };
 
 // Check existence of a conversation containing those members
 exports.conversation_existence = function (req, res, next) {
   const members = req.query.members.split(',');
-  Conversation.findOne({ members }).exec((err, conversation) => {
-    if (err) return next(err);
-    return res.json(conversation);
-  });
+  Conversation.findOne({ members: { $all: members } })
+    .populate('members', '-password -server -email')
+    .exec((err, conversation) => {
+      if (err) return next(err);
+      return res.json(conversation);
+    });
 };
 
 // List all the conversations of a specific user (GET)

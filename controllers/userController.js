@@ -272,7 +272,6 @@ exports.user_update_email = [
 ];
 
 exports.user_update_avatar = (req, res, next) => {
-  console.log(req.file);
   if (req.file) {
     // Temporarily saves the image and extracts the data
     const avatar = {
