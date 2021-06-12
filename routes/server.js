@@ -14,7 +14,7 @@ router.get('/', serverController.server_list);
 // POST to create a new server
 router.post(
   '/',
-  upload.icon,
+  upload.image,
   checkAuth.check_user,
   serverController.server_create,
 );
@@ -31,6 +31,9 @@ router.get('/:serverId/categories', categoryController.category_list);
 
 // GET the server messages
 router.get('/:serverId/messages', serverController.server_messages);
+
+// GET server members
+router.get('/:serverId/members', serverController.server_members);
 
 // GET a specific server
 router.get('/:serverId', serverController.server_detail);

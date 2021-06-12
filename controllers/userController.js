@@ -34,13 +34,15 @@ exports.user_search = function (req, res, next) {
 
 // List user servers (GET)
 exports.user_server = function (req, res, next) {
-  User.findOne({ _id: req.params.userId }, 'server').exec((err, user) => {
-    if (err) return next(err);
-    if (!user) {
-      res.json({ error: 'User not found.' });
-    }
-    return res.json(user);
-  });
+  User.findOne({ _id: req.params.userId }, 'server')
+    .populate('server')
+    .exec((err, user) => {
+      if (err) return next(err);
+      if (!user) {
+        res.json({ error: 'User not found.' });
+      }
+      return res.json(user.server);
+    });
 };
 
 // Update an user

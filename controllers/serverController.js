@@ -49,6 +49,14 @@ exports.server_messages = function (req, res, next) {
     });
 };
 
+// List all members in a server (GET)
+exports.server_members = function (req, res, next) {
+  User.find({ server: req.params.serverId }).exec((err, users) => {
+    if (err) return next(err);
+    return res.json(users);
+  });
+};
+
 // Create a server (POST)
 exports.server_create = [
   // Validation
