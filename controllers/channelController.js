@@ -62,6 +62,7 @@ exports.channel_create = [
       name: req.body.name,
       category: req.params.categoryId,
       server: req.params.serverId,
+      about: req.body.about,
       timestamp: Date.now(),
     });
 
@@ -91,7 +92,7 @@ exports.channel_update = [
 
     Channel.findByIdAndUpdate(
       req.params.channelId,
-      { name: req.body.name, category: req.body.category },
+      { name: req.body.name, category: req.body.category, about: req.body.about },
       {},
       (err, channel) => {
         if (err) return next(err);

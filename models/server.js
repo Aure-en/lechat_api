@@ -14,6 +14,7 @@ const ServerSchema = new Schema({
     contentType: String,
   },
   members: { type: Number, required: true, default: 1 },
+  about: String,
 });
 
 ServerSchema.virtual('url').get(function () {

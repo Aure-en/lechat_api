@@ -77,6 +77,8 @@ exports.server_create = [
     const data = {
       name: req.body.name,
       admin: req.user._id,
+      about: req.body.about,
+      rules: req.body.rules,
       timestamp: Date.now(),
     };
 

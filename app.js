@@ -8,9 +8,16 @@ require('dotenv').config({ path: path.resolve(__dirname, '.env.local') });
 require('./auth/passport');
 require('./mongo');
 
+const app = express();
+const httpServer = require('http').createServer(app);
+const io = require('socket.io')(httpServer, {
+  cors: {
+    origin: '*',
+  },
+});
 const indexRouter = require('./routes/index');
 
-const app = express();
+io.on('connection', (socket) => { console.log(socket.id); });
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -41,5 +48,7 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500);
   res.render('error');
 });
+
+httpServer.listen(3000, () => console.log('Listening on port 3000.'));
 
 module.exports = app;

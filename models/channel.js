@@ -7,6 +7,7 @@ const ChannelSchema = new Schema({
   timestamp: { type: Date, required: true },
   server: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
   category: { type: Schema.Types.ObjectId, ref: 'Server' },
+  about: String,
 });
 
 ChannelSchema.virtual('url').get(function () {
