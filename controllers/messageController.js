@@ -1,3 +1,4 @@
+const io = require('socket.io');
 const Message = require('../models/message');
 
 // Details of a specific message (GET)
@@ -39,6 +40,11 @@ exports.message_create = function (req, res, next) {
 
   message.save((err) => {
     if (err) return next(err);
+
+    if (req.params.conversationId) {
+      io.to(req.params.conversationId).emit('new message');
+    }
+
     res.redirect(303, message.url);
   });
 };

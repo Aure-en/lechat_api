@@ -10,14 +10,14 @@ require('./mongo');
 
 const app = express();
 const httpServer = require('http').createServer(app);
-const io = require('socket.io')(httpServer, {
-  cors: {
-    origin: '*',
-  },
-});
+const io = require('./socket/socket').init(httpServer);
 const indexRouter = require('./routes/index');
+const listeners = require('./socket/listeners');
 
-io.on('connection', (socket) => { console.log(socket.id); });
+io.on('connection', (socket) => {
+  console.log(socket.id);
+  listeners.authentification(socket);
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -52,3 +52,5 @@ app.use((err, req, res, next) => {
 httpServer.listen(3000, () => console.log('Listening on port 3000.'));
 
 module.exports = app;
+
+exports.io;
