@@ -10,13 +10,21 @@ require('./mongo');
 
 const app = express();
 const httpServer = require('http').createServer(app);
-const io = require('./socket/socket').init(httpServer);
+const io = require('./realtime/socket').init(httpServer);
 const indexRouter = require('./routes/index');
-const listeners = require('./socket/listeners');
+const listeners = require('./realtime/listeners');
+const message = require('./realtime/changestreams/message');
 
 io.on('connection', (socket) => {
-  console.log(socket.id);
+  console.log('Connection success', socket.id);
   listeners.authentification(socket);
+  message.init(io);
+
+  socket.on('disconnect', () => {
+    console.log('Connection disconnected', socket.id);
+    message.close();
+    socket.removeAllListeners();
+  });
 });
 
 // view engine setup
@@ -52,5 +60,3 @@ app.use((err, req, res, next) => {
 httpServer.listen(3000, () => console.log('Listening on port 3000.'));
 
 module.exports = app;
-
-exports.io;

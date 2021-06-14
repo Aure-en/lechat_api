@@ -4,7 +4,7 @@ module.exports = {
   init: (server) => {
     io = require('socket.io')(server, {
       cors: {
-        origin: "*",
+        origin: '*',
       },
     });
     return io;
