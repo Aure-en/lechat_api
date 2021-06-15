@@ -26,7 +26,7 @@ exports.channel_detail = function (req, res, next) {
 exports.channel_messages = function (req, res, next) {
   const limit = req.query.limit || 100;
   Message.find({ channel: req.params.channelId, ...queries.setPagination(req.query) })
-    .sort({ timestamp: -1 })
+    .sort({ timestamp: 1 })
     .limit(limit * 1) // Convert to number
     .populate('author')
     .populate({

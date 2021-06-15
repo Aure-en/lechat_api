@@ -58,9 +58,9 @@ exports.message_update = function (req, res, next) {
 
 // Delete a message
 exports.message_delete = function (req, res, next) {
-  Message.findByIdAndRemove(req.params.messageId, (err, message) => {
+  Message.findByIdAndRemove(req.params.messageId, (err) => {
     if (err) return next(err);
-    res.redirect(303, `/channels/${message.channel}/messages`);
+    res.json({ success: 'Message deleted.' });
   });
 };
 

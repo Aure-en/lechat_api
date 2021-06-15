@@ -59,7 +59,7 @@ exports.conversation_messages = function (req, res, next) {
     ...queries.setQueries(req.query),
     ...queries.setPagination(req.query),
   })
-    .sort({ timestamp: -1 })
+    .sort({ timestamp: 1 })
     .limit(limit * 1) // Convert to number
     .populate('author', 'username _id')
     .populate({
