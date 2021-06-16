@@ -6,10 +6,11 @@ exports.authentification = (socket) => {
     console.log(user);
     // Listen to user changes
     socket.join(user._id);
-    socket.join("test");
 
     // Listen to changes in user' servers
-    user.server.map((server) => { socket.join(server); });
+    user.server.map((server) => { 
+      socket.join(server);
+    });
 
     // Listen to changes in user' conversation
     await Conversation.find({ members: user._id }, '_id').exec(
