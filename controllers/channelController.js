@@ -1,5 +1,6 @@
 const { body, validationResult } = require('express-validator');
 const Channel = require('../models/channel');
+const Category = require('../models/category');
 const Message = require('../models/message');
 const queries = require('../utils/queries');
 
@@ -25,7 +26,10 @@ exports.channel_detail = function (req, res, next) {
 // List all messages in a channel (GET)
 exports.channel_messages = function (req, res, next) {
   const limit = req.query.limit || 100;
-  Message.find({ channel: req.params.channelId, ...queries.setPagination(req.query) })
+  Message.find({
+    channel: req.params.channelId,
+    ...queries.setPagination(req.query),
+  })
     .sort({ timestamp: 1 })
     .limit(limit * 1) // Convert to number
     .populate('author')
@@ -57,7 +61,7 @@ exports.channel_create = [
   },
 
   (req, res, next) => {
-    // There are no errors. Save the category.
+    // There are no errors. Save the channel.
     const channel = new Channel({
       name: req.body.name,
       category: req.params.categoryId,
@@ -66,9 +70,15 @@ exports.channel_create = [
       timestamp: Date.now(),
     });
 
-    channel.save((err) => {
+    channel.save((err, channel) => {
       if (err) return next(err);
-      return res.redirect(303, channel.url);
+      Category.updateOne(
+        { _id: req.params.categoryId },
+        { $push: { channel: channel._id } },
+      ).exec((err) => {
+        if (err) return next(err);
+        return res.redirect(303, channel.url);
+      });
     });
   },
 ];
@@ -92,7 +102,11 @@ exports.channel_update = [
 
     Channel.findByIdAndUpdate(
       req.params.channelId,
-      { name: req.body.name, category: req.body.category, about: req.body.about },
+      {
+        name: req.body.name,
+        category: req.body.category,
+        about: req.body.about,
+      },
       {},
       (err, channel) => {
         if (err) return next(err);
@@ -108,6 +122,12 @@ exports.channel_update = [
 exports.channel_delete = function (req, res, next) {
   Channel.findByIdAndRemove(req.params.channelId, (err, channel) => {
     if (err) return next(err);
-    res.redirect(`/categories/${channel.category}/channels`);
+    Category.updateOne(
+      { _id: req.params.categoryId },
+      { $pull: { channel: channel._id } },
+    ).exec((err) => {
+      if (err) return next(err);
+      return res.redirect(303, `/categories/${channel.category}/channels`);
+    });
   });
 };

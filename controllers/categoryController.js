@@ -5,7 +5,7 @@ const Channel = require('../models/channel');
 
 // List all categories of a server (GET)
 exports.category_list = function (req, res, next) {
-  Category.find({ server: req.params.serverId }).exec((err, categories) => {
+  Category.find({ server: req.params.serverId }).populate('channel').exec((err, categories) => {
     if (err) return next(err);
     return res.json(categories);
   });
