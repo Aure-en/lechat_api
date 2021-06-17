@@ -6,6 +6,7 @@ const Server = require('../models/server');
 const User = require('../models/user');
 const Message = require('../models/message');
 const Channel = require('../models/channel');
+const Category = require('../models/category');
 const queries = require('../utils/queries');
 
 // List of all servers (GET)
@@ -119,7 +120,7 @@ exports.server_create = [
 ];
 
 // Update a server (PUT)
-exports.server_update_name = [
+exports.server_update = [
   // Validation
   body('name', 'Name must be specified').trim().isLength({ min: 1 }).escape(),
 
@@ -135,9 +136,33 @@ exports.server_update_name = [
 
   // Form is valid. Save the server.
   (req, res, next) => {
+    const server = {
+      name: req.body.name,
+      about: req.body.about,
+    };
+
+    if (req.file) {
+      // Temporarily saves the image and extracts the data
+      const icon = {
+        name: req.file.filename,
+        data: fs.readFileSync(
+          path.join(__dirname, `../temp/${req.file.filename}`),
+        ),
+        contentType: req.file.mimetype,
+      };
+
+      // Delete the image from the disk after using it
+      fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
+        if (err) throw err;
+      });
+
+      // Save the image
+      server.icon = icon;
+    }
+
     Server.findByIdAndUpdate(
       req.params.serverId,
-      { name: req.body.name },
+      server,
       {},
       (err, server) => {
         if (err) return next(err);
@@ -147,39 +172,16 @@ exports.server_update_name = [
   },
 ];
 
-exports.server_update_icon = (req, res, next) => {
-  if (req.file) {
-    // Temporarily saves the image and extracts the data
-    const icon = {
-      name: req.file.filename,
-      data: fs.readFileSync(
-        path.join(__dirname, `../temp/${req.file.filename}`),
-      ),
-      contentType: req.file.mimetype,
-    };
-
-    // Delete the image from the disk after using it
-    fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
-      if (err) throw err;
-    });
-
-    // Save the image
-    Server.findByIdAndUpdate(req.params.serverId, { icon }, {}, (err, server) => {
+exports.server_remove_icon = (req, res, next) => {
+  Server.findByIdAndUpdate(
+    req.params.serverId,
+    { $unset: { icon: '' } },
+    {},
+    (err, server) => {
       if (err) return next(err);
       res.redirect(303, server.url);
-    });
-  } else {
-    // Remove the icon
-    Server.findByIdAndUpdate(
-      req.params.serverId,
-      { $unset: { icon: '' } },
-      {},
-      (err, server) => {
-        if (err) return next(err);
-        res.redirect(303, server.url);
-      },
-    );
-  }
+    },
+  );
 };
 
 // Delete a server (DELETE)
@@ -194,6 +196,11 @@ exports.server_delete = function (req, res, next) {
       // Delete the server channels
       function (callback) {
         Channel.deleteMany({ server: req.params.serverId }).exec(callback);
+      },
+
+      // Delete the server categories
+      function (callback) {
+        Category.deleteMany({ server: req.params.serverId }).exec(callback);
       },
 
       // Delete the server from the users servers list.

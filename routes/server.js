@@ -48,14 +48,15 @@ router.use(
 
 // PUT to update a server
 router.put(
-  '/:serverId/name',
-  serverController.server_update_name,
+  '/:serverId',
+  upload.image,
+  serverController.server_update,
 );
 
-router.put(
+router.delete(
   '/:serverId/icon',
   upload.image,
-  serverController.server_update_icon,
+  serverController.server_remove_icon,
 );
 
 // DELETE a server
