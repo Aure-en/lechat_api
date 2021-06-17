@@ -15,17 +15,23 @@ const indexRouter = require('./routes/index');
 const listeners = require('./realtime/listeners');
 const message = require('./realtime/changestreams/message');
 const section = require('./realtime/changestreams/section');
+const server = require('./realtime/changestreams/server');
+const user = require('./realtime/changestreams/user');
 
 io.on('connection', (socket) => {
   console.log('Connection success', socket.id);
   listeners.authentification(socket);
   message.init(io);
   section.init(io);
+  server.init(io);
+  user.init(io);
 
   socket.on('disconnect', () => {
     console.log('Connection disconnected', socket.id);
     message.close();
     section.close();
+    server.close();
+    user.close();
     socket.removeAllListeners();
   });
 });
