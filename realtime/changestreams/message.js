@@ -23,7 +23,7 @@ module.exports = {
 
             // Emit the message to the room
             const room = document.server || document.conversation;
-            io.in(room.toString()).emit(change.operationType, {
+            io.in(room.toString()).emit(`${change.operationType} message`, {
               operation: change.operationType,
               document,
             });
@@ -35,7 +35,7 @@ module.exports = {
           // We cannot get the room id from the document
           // For now, emit to all rooms.
           // Improvement idea: add room/server number to document _id?
-          io.emit(change.operationType, {
+          io.emit(`${change.operationType} message`, {
             operation: change.operationType,
             document: { _id: change.documentKey._id },
           });

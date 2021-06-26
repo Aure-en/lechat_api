@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const User = require('../models/user');
 const Server = require('../models/server');
+const Friend = require('../models/friend');
 
 // Detail of a specific user (GET)
 exports.user_detail = function (req, res, next) {
@@ -329,10 +330,38 @@ exports.user_delete = [
   },
 
   (req, res, next) => {
-    User.findByIdAndRemove(req.params.userId, (err) => {
-      if (err) return next(err);
-      res.json({ success: 'Account has been deleted.' });
-    });
+    async.parallel(
+      [
+        // Delete all user friendships
+        function (callback) {
+          Friend.deleteMany({
+            $or: [
+              { sender: req.params.userId },
+              { recipient: req.params.userId },
+            ],
+          }).exec(callback);
+        },
+
+        // Decrement server members
+        function (callback) {
+          User.findById(req.params.userId, 'server').exec((err, user) => {
+            Server.updateMany(
+              { _id: { $in: user.server } },
+              { $inc: { members: -1 } },
+            ).exec(callback);
+          });
+        },
+
+        // Delete account
+        function (callback) {
+          User.findByIdAndRemove(req.params.userId, callback);
+        },
+      ],
+      (err) => {
+        if (err) return next(err);
+        res.json({ success: 'Account has been deleted.' });
+      },
+    );
   },
 ];
 

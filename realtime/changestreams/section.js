@@ -14,8 +14,8 @@ const realtime = (io, change, section) => {
       if (!change.fullDocument) return;
       const category = { ...change.fullDocument };
 
-      // Emit the message to the room
-      io.in(change.fullDocument.server.toString()).emit(change.operationType, {
+      // Emit the change to the room
+      io.in(change.fullDocument.server.toString()).emit(`${change.operationType} ${section}`, {
         operation: change.operationType,
         document: category,
         section,
@@ -27,7 +27,7 @@ const realtime = (io, change, section) => {
       // We cannot get the room id from the document
       // For now, emit to all rooms.
       // Improvement idea: add room/server number to document _id?
-      io.emit(change.operationType, {
+      io.emit(`${change.operationType} ${section}`, {
         operation: change.operationType,
         document: { _id: change.documentKey._id },
         section,
