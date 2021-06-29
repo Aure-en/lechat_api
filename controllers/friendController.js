@@ -49,7 +49,7 @@ exports.friend_add = [
           });
         }
         next();
-      }
+      },
     );
   },
 
@@ -91,7 +91,7 @@ exports.friend_accept = [
       (err) => {
         if (err) return next(err);
         res.redirect(303, `/users/${req.user._id}/friends`);
-      }
+      },
     );
   },
 ];
@@ -103,8 +103,8 @@ exports.friend_delete = [
     Friend.findById(req.params.friendId).exec((err, friend) => {
       if (err) return next(err);
       if (
-        req.user._id !== friend.sender.toString() &&
-        req.user._id !== friend.recipient.toString()
+        req.user._id !== friend.sender.toString()
+        && req.user._id !== friend.recipient.toString()
       ) {
         return res.status(403).json({
           error: 'You do not have permission to perform this operation.',

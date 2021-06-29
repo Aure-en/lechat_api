@@ -6,10 +6,17 @@ module.exports = {
   init: (io) => {
     changeStream = Server.watch([], { fullDocument: 'updateLookup' });
     changeStream.on('change', (change) => {
+      console.log('CHANGE', change);
+      console.log(change.fullDocument.icon);
       if (change.operationType === 'delete') return;
-      io.in(change.fullDocument._id).emit(`server ${change.operationType}`, {
-        operation: change.operationType,
-        document: change.fullDocument,
+
+      // I have no idea why the server icon won't display properly
+      // on the front-end when I simply send the change.fullDocument.
+      Server.findById(change.fullDocument._id).exec((err, res) => {
+        io.in(change.fullDocument._id.toString()).emit(`${change.operationType} server`, {
+          operation: change.operationType,
+          document: res,
+        });
       });
     });
   },

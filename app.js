@@ -10,18 +10,12 @@ require('./mongo');
 
 const app = express();
 const httpServer = require('http').createServer(app);
+const changestreams = require('./realtime/changestreams/changestreams');
 const io = require('./realtime/socket').init(httpServer);
 const indexRouter = require('./routes/index');
 const listeners = require('./realtime/listeners');
-const message = require('./realtime/changestreams/message');
-const section = require('./realtime/changestreams/section');
-const server = require('./realtime/changestreams/server');
-const user = require('./realtime/changestreams/user');
 
-message.init(io);
-section.init(io);
-server.init(io);
-user.init(io);
+changestreams.init(io);
 
 io.on('connection', (socket) => {
   console.log('Connection success', socket.id);

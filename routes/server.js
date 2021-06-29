@@ -29,6 +29,9 @@ router.post(
 // GET to get the server categories
 router.get('/:serverId/categories', categoryController.category_list);
 
+// GET to get all the server channels
+router.get('/:serverId/channels', channelController.channel_list_server);
+
 // GET the server messages
 router.get('/:serverId/messages', serverController.server_messages);
 

@@ -3,6 +3,14 @@ const Channel = require('../models/channel');
 const Message = require('../models/message');
 const queries = require('../utils/queries');
 
+// List all channels of a server (GET)
+exports.channel_list_server = function (req, res, next) {
+  Channel.find({ server: req.params.serverId }).populate('category').exec((err, channels) => {
+    if (err) return next(err);
+    return res.json(channels);
+  });
+};
+
 // List all channels of a category (GET)
 exports.channel_list = function (req, res, next) {
   Channel.find({ category: req.params.categoryId }).exec((err, channels) => {

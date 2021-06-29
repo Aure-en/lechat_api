@@ -6,7 +6,7 @@ const ChannelSchema = new Schema({
   name: { type: String, required: true },
   timestamp: { type: Date, required: true },
   server: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
-  category: { type: Schema.Types.ObjectId, ref: 'Server' },
+  category: { type: Schema.Types.ObjectId, ref: 'Category' },
   about: String,
 });
 
