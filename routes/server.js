@@ -43,7 +43,7 @@ router.get('/:serverId', serverController.server_detail);
 
 // Check permissions for CUD Operations on the server.
 router.use(
-  '/:serverId/*',
+  ['/:serverId', '/:serverId/*'],
   checkAuth.check_user,
   checkAuth.check_admin,
   checkAuth.check_permission,
@@ -65,9 +65,6 @@ router.delete(
 // DELETE a server
 router.delete(
   '/:serverId',
-  checkAuth.check_user,
-  checkAuth.check_admin,
-  checkAuth.check_permission,
   serverController.server_delete,
 );
 

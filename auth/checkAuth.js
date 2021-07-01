@@ -31,7 +31,7 @@ exports.check_admin = function (req, res, next) {
         if (req.user._id === server.admin.toString()) {
           res.locals.isAllowed = true;
         }
-        next();
+        return next();
       });
       break;
 
@@ -44,7 +44,7 @@ exports.check_admin = function (req, res, next) {
           if (req.user._id === category.server.admin.toString()) {
             res.locals.isAllowed = true;
           }
-          next();
+          return next();
         });
       break;
 
@@ -53,11 +53,12 @@ exports.check_admin = function (req, res, next) {
         .populate('server')
         .exec((err, channel) => {
           if (err) return next(err);
-          if (!channel) return res.json({ error: 'Category not found.' });
+          if (!channel) return res.json({ error: 'Channel not found.' });
+          console.log(req.user._id, channel.server.admin.toString());
           if (req.user._id === channel.server.admin.toString()) {
             res.locals.isAllowed = true;
           }
-          next();
+          return next();
         });
       break;
 
@@ -70,7 +71,7 @@ exports.check_admin = function (req, res, next) {
           if (req.user._id === message.server.admin.toString()) {
             res.locals.isAllowed = true;
           }
-          next();
+          return next();
         });
       break;
     default:
