@@ -6,7 +6,7 @@ const queries = require('../utils/queries');
 // List a conversation informations
 exports.conversation_detail = function (req, res, next) {
   Conversation.findById(req.params.conversationId)
-    .populate('members', '-password -server -email')
+    .populate('members', 'username _id avatar')
     .exec((err, conversation) => {
       if (err) return next(err);
       if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
@@ -34,7 +34,7 @@ exports.conversation_permission = function (req, res, next) {
 exports.conversation_existence = function (req, res, next) {
   const members = req.query.members.split(',');
   Conversation.findOne({ members: { $all: members } })
-    .populate('members', '-password -server -email')
+    .populate('members', 'username _id avatar')
     .exec((err, conversation) => {
       if (err) return next(err);
       return res.json(conversation);
@@ -61,7 +61,7 @@ exports.conversation_messages = function (req, res, next) {
   })
     .sort({ timestamp: 1 })
     .limit(limit * 1) // Convert to number
-    .populate('author', 'username _id')
+    .populate('author', 'username _id avatar')
     .populate({
       path: 'reaction',
       populate: {

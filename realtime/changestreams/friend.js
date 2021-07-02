@@ -8,7 +8,7 @@ module.exports = {
   init: (io) => {
     changeStream = Friend.watch([], { fullDocument: 'updateLookup' });
     changeStream.on('change', (change) => {
-      console.log('CHANGE', change);
+      console.log('FRIEND CHANGE', change);
 
       switch (change.operationType) {
         case 'insert':

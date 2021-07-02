@@ -6,7 +6,7 @@ let channelStream;
 
 const realtime = (io, change, section) => {
 // section is either 'category' or 'channel'
-  console.log('CHANGE', change);
+  console.log('SECTION CHANGE', change);
 
   switch (change.operationType) {
     case 'insert':

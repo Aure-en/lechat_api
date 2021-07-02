@@ -7,7 +7,7 @@ module.exports = {
   init: (io) => {
     changeStream = Message.watch([], { fullDocument: 'updateLookup' });
     changeStream.on('change', (change) => {
-      console.log('CHANGE', change);
+      console.log('MESSAGE CHANGE', change);
 
       switch (change.operationType) {
         case 'insert':

@@ -36,7 +36,7 @@ exports.server_messages = function (req, res, next) {
   })
     .sort({ timestamp: 1 })
     .limit(limit * 1) // Convert to number
-    .populate('author', 'username _id')
+    .populate('author', 'username _id avatar')
     .populate({
       path: 'reaction',
       populate: {
