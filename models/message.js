@@ -9,7 +9,8 @@ const MessageSchema = new Schema({
   server: { type: Schema.Types.ObjectId, ref: 'Server' },
   channel: { type: Schema.Types.ObjectId, ref: 'Channel' },
   conversation: { type: Schema.Types.ObjectId, ref: 'Conversation' },
-  edited: { type: Boolean, default: false },
+  edited: { type: Boolean },
+  pinned: { type: Boolean },
   reaction: [
     new Schema({
       emote: { type: Schema.Types.ObjectId, ref: 'Emote' },

@@ -19,6 +19,7 @@ exports.check_user = function (req, res, next) {
 };
 
 // Check that the user is the administrator (only them can delete the server).
+// TO-DO: Works but should be rewritten.
 exports.check_admin = function (req, res, next) {
   // If the user already has permission, no need to check.
   if (res.locals.isAllowed) return next();
@@ -75,7 +76,14 @@ exports.check_admin = function (req, res, next) {
         });
       break;
     default:
-      return next();
+      Server.findById(req.params.serverId).exec((err, server) => {
+        if (err) return next(err);
+        if (!server) return res.json({ error: 'Server not found.' });
+        if (req.user._id === server.admin.toString()) {
+          res.locals.isAllowed = true;
+        }
+        return next();
+      });
   }
 };
 
