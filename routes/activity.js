@@ -15,4 +15,7 @@ router.get('/:userId/rooms/:roomId', activityController.activity_room);
 // PUT to update the activity of a specific user
 router.put('/:userId/rooms/:roomId', activityController.activity_update);
 
+// DELETE to remove a room from the user's activity
+router.delete('/:userId/rooms/:roomId', activityController.activity_delete);
+
 module.exports = router;

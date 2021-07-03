@@ -81,7 +81,7 @@ test('Create an activity for an user', async (done) => {
       Authorization: `Bearer ${user.token}`,
       'Content-Type': 'application/json',
     })
-    .send({ userId: user.user._id })
+    .send({ user: user.user._id })
     .redirects(1);
   expect(res.body._id).toBe(user.user._id);
   expect(Array.isArray(res.body.activity)).toBe(true);
@@ -98,7 +98,7 @@ describe('User activity is tracked when an user visits a room for the first time
       })
       .redirects(1);
     expect(
-      res.body.activity.findIndex((activity) => activity.room === server._id),
+      res.body.activity.findIndex((activity) => activity.room === server._id)
     ).not.toBe(-1);
     done();
   });
@@ -112,7 +112,7 @@ describe('User activity is tracked when an user visits a room for the first time
       })
       .redirects(1);
     expect(
-      res.body.activity.findIndex((activity) => activity.room === channel._id),
+      res.body.activity.findIndex((activity) => activity.room === channel._id)
     ).not.toBe(-1);
     done();
   });
@@ -127,8 +127,8 @@ describe('User activity is tracked when an user visits a room for the first time
       .redirects(1);
     expect(
       res.body.activity.findIndex(
-        (activity) => activity.room === conversation._id,
-      ),
+        (activity) => activity.room === conversation._id
+      )
     ).not.toBe(-1);
     done();
   });
@@ -149,7 +149,7 @@ describe('User activity is updated when an user visits a room again', () => {
 
     // Save the visit time to check if it is updated when they visit again.
     previousTime = res.body.activity.find(
-      (activity) => activity.room === server._id,
+      (activity) => activity.room === server._id
     ).timestamp;
     done();
   });
@@ -164,7 +164,7 @@ describe('User activity is updated when an user visits a room again', () => {
       })
       .redirects(1);
     const { timestamp } = res.body.activity.find(
-      (activity) => activity.room === server._id,
+      (activity) => activity.room === server._id
     );
     expect(timestamp).not.toBe(previousTime);
     done();
@@ -193,8 +193,8 @@ describe('User activity can be received', () => {
     expect(res.body._id).toBe(user.user._id);
     expect(
       res.body.activity.findIndex(
-        (activity) => activity.room === conversation._id,
-      ),
+        (activity) => activity.room === conversation._id
+      )
     ).not.toBe(-1);
     done();
   });
@@ -208,6 +208,32 @@ describe('User activity can be received', () => {
       });
     expect(res.body._id).toBe(user.user._id);
     expect(res.body.activity.room).toBe(conversation._id);
+    done();
+  });
+});
+
+describe('User activity can stopped being tracked', () => {
+  beforeAll(async (done) => {
+    // User visits a room
+    await request(app)
+      .put(`/activity/${user.user._id}/rooms/${conversation._id}`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      });
+    done();
+  });
+
+  test('Room can be removed from the user activity', async (done) => {
+    const res = await request(app)
+      .delete(`/activity/${user.user._id}/rooms/${conversation._id}`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .redirects(1);
+    console.log(res.body);
+    expect(res.body.activity.findIndex((activity) => activity.room === conversation._id)).toBe(-1);
     done();
   });
 });

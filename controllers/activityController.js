@@ -4,7 +4,7 @@ const Activity = require('../models/activity');
 // Create a document to start tracking the user's activity.
 exports.activity_create = (req, res, next) => {
   const activity = new Activity({
-    _id: req.body.userId,
+    _id: req.body.user,
     activity: [],
   });
 
@@ -59,6 +59,17 @@ exports.activity_update = (req, res, next) => {
       return res.redirect(303, `/activity/${req.params.userId}`);
     },
   );
+};
+
+// Remove a room from the user's activity
+exports.activity_delete = (req, res, next) => {
+  Activity.findOneAndUpdate(
+    { _id: req.params.userId },
+    { $pull: { activity: { room: req.params.roomId } } },
+  ).exec((err, activity) => {
+    if (err) return next(err);
+    return res.redirect(303, activity.url);
+  });
 };
 
 // Get the user's activity (full list)
