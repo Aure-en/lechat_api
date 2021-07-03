@@ -198,4 +198,16 @@ describe('User activity can be received', () => {
     ).not.toBe(-1);
     done();
   });
+
+  test('Receive the activity regarding a specific room', async (done) => {
+    const res = await request(app)
+      .get(`/activity/${user.user._id}/rooms/${conversation._id}`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      });
+    expect(res.body._id).toBe(user.user._id);
+    expect(res.body.activity.room).toBe(conversation._id);
+    done();
+  });
 });
