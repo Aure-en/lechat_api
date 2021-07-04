@@ -1,11 +1,13 @@
 const async = require('async');
+const { body, validationResult } = require('express-validator');
 const Activity = require('../models/activity');
 
 // Create a document to start tracking the user's activity.
 exports.activity_create = (req, res, next) => {
   const activity = new Activity({
     _id: req.body.user,
-    activity: [],
+    servers: [],
+    conversations: [],
   });
 
   activity.save((err) => {
@@ -14,90 +16,186 @@ exports.activity_create = (req, res, next) => {
   });
 };
 
-// Update the activity when the user visits rooms.
-exports.activity_update = (req, res, next) => {
-  /*
-   * If the user has never visited this room
-   * → Create an object with the room _id and timestamp and insert it in the activity array.
-   * Else, if the user has already visited this room.
-   * → Look for the object with the room _id and update it.
-   */
-  async.parallel(
-    [
-      // Update the room's activity if it exists in the array.
-      (callback) => {
-        Activity.updateOne(
-          { _id: req.params.userId, 'activity.room': req.params.roomId },
-          {
-            $set: {
-              'activity.$': {
-                room: req.params.roomId,
-                timestamp: Date.now(),
+// Update the activity when the user visits a server
+exports.activity_update_server = [
+  // Validation
+  body('server', 'Server must be specified')
+    .trim()
+    .isLength({ min: 1 })
+    .escape(),
+
+  // Check for errors
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({ errors: errors.array() });
+    }
+    next();
+  },
+
+  // Update the servers array.
+  (req, res, next) => {
+    Activity.findOneAndUpdate(
+      { _id: req.params.userId, 'servers._id': { $ne: req.body.server } },
+      {
+        $push: {
+          servers: {
+            _id: req.body.server,
+            channels: [],
+          },
+        },
+      },
+    ).exec((err) => {
+      if (err) return next(err);
+      next();
+    });
+  },
+];
+
+exports.activity_update_channel = [
+  // Validation
+  body('channel', 'Channel must be specified')
+    .trim()
+    .isLength({ min: 1 })
+    .escape(),
+
+  // Check for errors
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({ errors: errors.array() });
+    }
+    next();
+  },
+
+  (req, res, next) => {
+    async.parallel(
+      [
+        // Update the channel activity if it already exists in the channels array.
+        (callback) => {
+          Activity.findOneAndUpdate(
+            {
+              _id: req.params.userId,
+              'servers.channels._id': req.body.channel,
+            },
+            {
+              $set: {
+                'servers.$.channels': {
+                  _id: req.body.channel,
+                  timestamp: Date.now(),
+                },
               },
             },
-          },
-        ).exec(callback);
-      },
+          ).exec(callback);
+        },
 
-      // Push the room's activity in the activity array if it doesn't exist yet.
-      (callback) => {
-        Activity.findOneAndUpdate(
-          {
-            _id: req.params.userId,
-            'activity.room': { $ne: req.params.roomId },
-          },
-          {
-            $push: {
-              activity: { room: req.params.roomId, timestamp: Date.now() },
+        // Push the channel in the channels array if it isn't in it yet.
+        (callback) => {
+          Activity.findOneAndUpdate(
+            {
+              _id: req.params.userId,
+              'servers._id': req.body.server,
+              'servers.channels._id': { $ne: req.body.channel },
             },
-          },
-        ).exec(callback);
+            {
+              $push: {
+                'servers.$.channels': {
+                  _id: req.body.channel,
+                  timestamp: Date.now(),
+                },
+              },
+            },
+          ).exec(callback);
+        },
+      ],
+      (err) => {
+        if (err) return next(err);
+        return res.redirect(303, `/activity/${req.params.userId}`);
       },
-    ],
-    (err) => {
-      if (err) return next(err);
-      return res.redirect(303, `/activity/${req.params.userId}`);
-    },
-  );
-};
+    );
+  },
+];
+
+// Update the activity when the user visits a conversation
+exports.activity_update_conversation = [
+  // Validation
+  body('conversation', 'Conversation must be specified')
+    .trim()
+    .isLength({ min: 1 })
+    .escape(),
+
+  // Check for errors
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({ errors: errors.array() });
+    }
+    next();
+  },
+
+  // Update the conversations array.
+  (req, res, next) => {
+    async.parallel(
+      [
+        // Update the conversation activity if it already exists in the array.
+        (callback) => {
+          Activity.findOneAndUpdate(
+            {
+              _id: req.params.userId,
+              'conversations._id': req.body.conversation,
+            },
+            {
+              $set: {
+                'conversations.$': {
+                  _id: req.body.conversation,
+                  timestamp: Date.now(),
+                },
+              },
+            },
+          ).exec(callback);
+        },
+
+        // Push the conversation in the conversations array if it isn't in it yet.
+        (callback) => {
+          Activity.findOneAndUpdate(
+            {
+              _id: req.params.userId,
+              'conversations._id': { $ne: req.body.conversation },
+            },
+            {
+              $push: {
+                conversations: {
+                  _id: req.body.conversation,
+                  timestamp: Date.now(),
+                },
+              },
+            },
+          ).exec(callback);
+        },
+      ],
+      (err) => {
+        if (err) return next(err);
+        return res.redirect(303, `/activity/${req.params.userId}`);
+      },
+    );
+  },
+];
 
 // Remove a room from the user's activity
 exports.activity_delete = (req, res, next) => {
-  Activity.findOneAndUpdate(
-    { _id: req.params.userId },
-    { $pull: { activity: { room: req.params.roomId } } },
-  ).exec((err, activity) => {
+  Activity.findOneAndDelete({ _id: req.params.userId }).exec((err) => {
     if (err) return next(err);
-    return res.redirect(303, activity.url);
+    return res.json({ success: 'Activity deleted.' });
   });
 };
 
 // Get the user's activity (full list)
 exports.activity_user = (req, res, next) => {
   Activity.findOne({ _id: req.params.userId })
-    .populate('room')
-    .exec((err, activity) => {
-      if (err) return next(err);
-      if (!activity) return res.status(404).json({ error: 'User not found' });
-      return res.json(activity);
-    });
-};
-
-// Get the user's activity in a specific room
-exports.activity_room = (req, res, next) => {
-  Activity.findOne({
-    _id: req.params.userId,
-    'activity.room': req.params.roomId,
-  })
-    .populate('room')
+    .populate('conversations')
     .exec((err, activity) => {
       if (err) return next(err);
       if (!activity) return res.status(404).json({ error: 'Activity not found' });
-      return res.json({
-        _id: activity._id,
-        activity: activity.activity.find(
-          (activity) => activity.room.toString() === req.params.roomId,
-        ),
-      });
+      return res.json(activity);
     });
 };

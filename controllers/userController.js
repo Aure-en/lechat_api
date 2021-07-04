@@ -8,7 +8,7 @@ const Server = require('../models/server');
 const Friend = require('../models/friend');
 
 // Detail of a specific user (GET)
-exports.user_detail = function (req, res, next) {
+exports.user_detail = (req, res, next) => {
   User.findOne({ _id: req.params.userId }, 'username email avatar _id server')
     .populate('server')
     .exec((err, user) => {
@@ -21,9 +21,8 @@ exports.user_detail = function (req, res, next) {
 };
 
 // Search for a user from their username or email (GET)
-exports.user_search = function (req, res, next) {
-  if (!req.query.search)
-    return res.json({ error: 'Search query must not be empty.' });
+exports.user_search = (req, res, next) => {
+  if (!req.query.search) return res.json({ error: 'Search query must not be empty.' });
   User.findOne({
     $or: [{ username: req.query.search }, { email: req.query.search }],
   }).exec((err, user) => {
@@ -34,7 +33,7 @@ exports.user_search = function (req, res, next) {
 };
 
 // List user servers (GET)
-exports.user_server = function (req, res, next) {
+exports.user_server = (req, res, next) => {
   User.findOne({ _id: req.params.userId }, 'server')
     .populate('server')
     .exec((err, user) => {
@@ -111,7 +110,7 @@ exports.user_update_username = [
       (err, user) => {
         if (err) return next(err);
         res.redirect(303, user.url);
-      }
+      },
     );
   },
 ];
@@ -195,7 +194,7 @@ exports.user_update_password = [
         (err, user) => {
           if (err) return next(err);
           return res.redirect(303, user.url);
-        }
+        },
       );
     });
   },
@@ -269,7 +268,7 @@ exports.user_update_email = [
       (err, user) => {
         if (err) return next(err);
         res.redirect(303, user.url);
-      }
+      },
     );
   },
 ];
@@ -280,7 +279,7 @@ exports.user_update_avatar = (req, res, next) => {
     const avatar = {
       name: req.file.filename,
       data: fs.readFileSync(
-        path.join(__dirname, `../temp/${req.file.filename}`)
+        path.join(__dirname, `../temp/${req.file.filename}`),
       ),
       contentType: req.file.mimetype,
     };
@@ -304,7 +303,7 @@ exports.user_update_avatar = (req, res, next) => {
       (err, user) => {
         if (err) return next(err);
         res.redirect(303, user.url);
-      }
+      },
     );
   }
 };
@@ -347,7 +346,7 @@ exports.user_delete = [
           User.findById(req.params.userId, 'server').exec((err, user) => {
             Server.updateMany(
               { _id: { $in: user.server } },
-              { $inc: { members: -1 } }
+              { $inc: { members: -1 } },
             ).exec(callback);
           });
         },
@@ -360,7 +359,7 @@ exports.user_delete = [
       (err) => {
         if (err) return next(err);
         res.json({ success: 'Account has been deleted.' });
-      }
+      },
     );
   },
 ];
@@ -379,8 +378,7 @@ exports.user_server_join = [
   // Check that the user hasn't already joined the server
   (req, res, next) => {
     User.findById(req.params.userId, 'server').exec((err, user) => {
-      if (user.server.includes(req.params.serverId))
-        return res.json({ error: 'Server already joined.' });
+      if (user.server.includes(req.params.serverId)) return res.json({ error: 'Server already joined.' });
       next();
     });
   },
@@ -393,7 +391,7 @@ exports.user_server_join = [
           User.findByIdAndUpdate(
             req.params.userId,
             { $push: { server: req.params.serverId } },
-            {}
+            {},
           ).exec(callback);
         },
 
@@ -402,43 +400,43 @@ exports.user_server_join = [
           Server.findByIdAndUpdate(
             req.params.serverId,
             { $inc: { members: 1 } },
-            {}
+            {},
           ).exec(callback);
         },
       ],
       (err) => {
         if (err) return next(err);
         res.redirect(303, `/users/${req.params.userId}`);
-      }
+      },
     );
   },
 ];
 
 // User leaves a server
-exports.user_server_leave = function (req, res, next) {
+exports.user_server_leave = (req, res, next) => {
   async.parallel(
     [
       // Remove the server from the user's server list.
-      function (callback) {
+      (callback) => {
         User.findByIdAndUpdate(
           req.params.userId,
           { $pull: { server: req.params.serverId } },
-          {}
+          {},
         ).exec(callback);
       },
 
       // Decrement server members
-      function (callback) {
+      (callback) => {
         Server.findByIdAndUpdate(
           req.params.serverId,
           { $inc: { members: -1 } },
-          {}
+          {},
         ).exec(callback);
       },
     ],
     (err) => {
       if (err) return next(err);
       res.redirect(303, `/users/${req.params.userId}`);
-    }
+    },
   );
 };

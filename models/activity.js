@@ -3,12 +3,21 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const ActivitySchema = new Schema({
-  activity: [
+  servers: [
     {
-      // Room can be channel, server or conversation id.
-      room: { type: Schema.Types.ObjectId, required: true },
-      timestamp: { type: Number, required: true },
-      _id: false,
+      _id: { type: Schema.Types.ObjectId, ref: 'Server', required: true },
+      channels: [
+        {
+          _id: { type: Schema.Types.ObjectId, ref: 'Channel', required: true },
+          timestamp: Number,
+        },
+      ],
+    },
+  ],
+  conversations: [
+    {
+      _id: { type: Schema.Types.ObjectId, ref: 'Conversation', required: true },
+      timestamp: Number,
     },
   ],
   _id: { type: Schema.Types.ObjectId, ref: 'User', required: true },

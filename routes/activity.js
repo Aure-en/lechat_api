@@ -9,13 +9,16 @@ router.post('/', activityController.activity_create);
 // GET the activity of a specific user
 router.get('/:userId', activityController.activity_user);
 
-// GET the activity of a user in a specific room
-router.get('/:userId/rooms/:roomId', activityController.activity_room);
-
 // PUT to update the activity of a specific user
-router.put('/:userId/rooms/:roomId', activityController.activity_update);
+router.put(
+  '/:userId/servers',
+  activityController.activity_update_server,
+  activityController.activity_update_channel,
+);
 
-// DELETE to remove a room from the user's activity
-router.delete('/:userId/rooms/:roomId', activityController.activity_delete);
+router.put('/:userId/conversations', activityController.activity_update_conversation);
+
+// DELETE to delete a user's activity
+router.delete('/:userId', activityController.activity_delete);
 
 module.exports = router;

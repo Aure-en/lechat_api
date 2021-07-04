@@ -5,6 +5,7 @@ const app = require('../app');
 let user;
 let server;
 let channel;
+let channel2;
 let conversation;
 
 beforeAll(async (done) => {
@@ -69,6 +70,17 @@ beforeAll(async (done) => {
     .send({ name: 'Channel' })
     .redirects(1);
   channel = channelRes.body;
+
+  // Create another channel
+  const channel2Res = await request(app)
+    .post(`/servers/${server._id}/categories/${category._id}/channels`)
+    .set({
+      Authorization: `Bearer ${user.token}`,
+      'Content-Type': 'application/json',
+    })
+    .send({ name: 'Channel' })
+    .redirects(1);
+  channel2 = channel2Res.body;
   done();
 });
 
@@ -84,156 +96,157 @@ test('Create an activity for an user', async (done) => {
     .send({ user: user.user._id })
     .redirects(1);
   expect(res.body._id).toBe(user.user._id);
-  expect(Array.isArray(res.body.activity)).toBe(true);
+  expect(Array.isArray(res.body.servers)).toBe(true);
+  expect(Array.isArray(res.body.conversations)).toBe(true);
   done();
 });
 
-describe('User activity is tracked when an user visits a room for the first time', () => {
-  test('It works when the room is a server', async (done) => {
+describe('User activity is tracked when an user visits a channel', () => {
+  test('Server and channel are saved when the user visits a channel', async (done) => {
+    // User visits the channel
     const res = await request(app)
-      .put(`/activity/${user.user._id}/rooms/${server._id}`)
+      .put(`/activity/${user.user._id}/servers`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
+      .send({ server: server._id, channel: channel._id })
       .redirects(1);
-    expect(
-      res.body.activity.findIndex((activity) => activity.room === server._id)
-    ).not.toBe(-1);
+
+    // Check that the server and channel were saved.
+    const { servers } = res.body;
+
+    const visitedServer = servers.find((serv) => serv._id === server._id);
+    expect(visitedServer).toBeDefined();
+
+    const visitedChannel = visitedServer.channels.find((chan) => chan._id === channel._id);
+    expect(visitedChannel).toBeDefined();
     done();
   });
 
-  test('It works when the room is a channel', async (done) => {
-    const res = await request(app)
-      .put(`/activity/${user.user._id}/rooms/${channel._id}`)
+  test('Activity from several channels from the same servers can be saved', async (done) => {
+    // User visits a channel from the server
+    await request(app)
+      .put(`/activity/${user.user._id}/servers`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .redirects(1);
-    expect(
-      res.body.activity.findIndex((activity) => activity.room === channel._id)
-    ).not.toBe(-1);
-    done();
-  });
+      .send({ server: server._id, channel: channel._id });
 
-  test('It works when the room is a private group chat', async (done) => {
+    // User visits another channel from the server
     const res = await request(app)
-      .put(`/activity/${user.user._id}/rooms/${conversation._id}`)
+      .put(`/activity/${user.user._id}/servers`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
+      .send({ server: server._id, channel: channel2._id })
       .redirects(1);
-    expect(
-      res.body.activity.findIndex(
-        (activity) => activity.room === conversation._id
-      )
-    ).not.toBe(-1);
+
+    const { servers } = res.body;
+    const visitedServer = servers.find((serv) => serv._id === server._id);
+    expect(visitedServer.channels.length).toBe(2);
     done();
   });
 });
 
-describe('User activity is updated when an user visits a room again', () => {
+describe('User activity is updated when an user visits a channel again', () => {
   let previousTime;
 
   beforeAll(async (done) => {
-    // User visits a room
+    // User visits the channel
     const res = await request(app)
-      .put(`/activity/${user.user._id}/rooms/${server._id}`)
+      .put(`/activity/${user.user._id}/servers`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
+      .send({ server: server._id, channel: channel._id })
       .redirects(1);
 
     // Save the visit time to check if it is updated when they visit again.
-    previousTime = res.body.activity.find(
-      (activity) => activity.room === server._id
-    ).timestamp;
+    const visitedServer = res.body.servers.find((serv) => serv._id === server._id);
+    const visitedChannel = visitedServer.channels.find((chan) => chan._id === channel._id);
+    previousTime = visitedChannel.timestamp;
     done();
   });
 
-  test('Timestamp is updated when the user visits a room again', async (done) => {
-    // User visits the room again
+  test('Timestamp is updated when the user visits a channel again', async (done) => {
+    // User visits the channel again
     const res = await request(app)
-      .put(`/activity/${user.user._id}/rooms/${server._id}`)
+      .put(`/activity/${user.user._id}/servers`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
+      .send({ server: server._id, channel: channel._id })
       .redirects(1);
-    const { timestamp } = res.body.activity.find(
-      (activity) => activity.room === server._id
-    );
-    expect(timestamp).not.toBe(previousTime);
+    const visitedServer = res.body.servers.find((serv) => serv._id === server._id);
+    const visitedChannel = visitedServer.channels.find((chan) => chan._id === channel._id);
+    expect(visitedChannel.timestamp).not.toBe(previousTime);
     done();
   });
 });
 
-describe('User activity can be received', () => {
-  beforeAll(async (done) => {
-    // User visits a room
-    await request(app)
-      .put(`/activity/${user.user._id}/rooms/${conversation._id}`)
-      .set({
-        Authorization: `Bearer ${user.token}`,
-        'Content-Type': 'application/json',
-      });
-    done();
-  });
-
-  test("Receive an user's activity", async (done) => {
-    const res = await request(app)
-      .get(`/activity/${user.user._id}`)
-      .set({
-        Authorization: `Bearer ${user.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.body._id).toBe(user.user._id);
-    expect(
-      res.body.activity.findIndex(
-        (activity) => activity.room === conversation._id
-      )
-    ).not.toBe(-1);
-    done();
-  });
-
-  test('Receive the activity regarding a specific room', async (done) => {
-    const res = await request(app)
-      .get(`/activity/${user.user._id}/rooms/${conversation._id}`)
-      .set({
-        Authorization: `Bearer ${user.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.body._id).toBe(user.user._id);
-    expect(res.body.activity.room).toBe(conversation._id);
-    done();
-  });
+test('User activity is tracked when an user visits a conversation', async (done) => {
+  // User visits the conversation
+  const res = await request(app)
+    .put(`/activity/${user.user._id}/conversations`)
+    .set({
+      Authorization: `Bearer ${user.token}`,
+      'Content-Type': 'application/json',
+    })
+    .send({ conversation: conversation._id })
+    .redirects(1);
+  expect(res.body.conversations.find((conv) => conv._id === conversation._id)).toBeDefined();
+  done();
 });
 
-describe('User activity can stopped being tracked', () => {
-  beforeAll(async (done) => {
-    // User visits a room
-    await request(app)
-      .put(`/activity/${user.user._id}/rooms/${conversation._id}`)
-      .set({
-        Authorization: `Bearer ${user.token}`,
-        'Content-Type': 'application/json',
-      });
-    done();
-  });
+describe('User activity is updated when an user visits a conversation again', () => {
+  let previousTime;
 
-  test('Room can be removed from the user activity', async (done) => {
+  beforeAll(async (done) => {
+    // User visits the channel
     const res = await request(app)
-      .delete(`/activity/${user.user._id}/rooms/${conversation._id}`)
+      .put(`/activity/${user.user._id}/conversations`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
+      .send({ conversation: conversation._id })
       .redirects(1);
-    console.log(res.body);
-    expect(res.body.activity.findIndex((activity) => activity.room === conversation._id)).toBe(-1);
+
+    // Save the visit time to check if it is updated when they visit again.
+    const conv = res.body.conversations.find((conv) => conv._id === conversation._id);
+    previousTime = conv.timestamp;
     done();
   });
+
+  test('Timestamp is updated when the user visits a conversation again', async (done) => {
+    // User visits the channel again
+    const res = await request(app)
+      .put(`/activity/${user.user._id}/conversations`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ conversation: conversation._id })
+      .redirects(1);
+
+    const conv = res.body.conversations.find((conv) => conv._id === conversation._id);
+    expect(conv.timestamp).not.toBe(previousTime);
+    done();
+  });
+});
+
+test("Receive an user's activity", async (done) => {
+  const res = await request(app)
+    .get(`/activity/${user.user._id}`)
+    .set({
+      Authorization: `Bearer ${user.token}`,
+      'Content-Type': 'application/json',
+    });
+  expect(res.body._id).toBe(user.user._id);
+  done();
 });

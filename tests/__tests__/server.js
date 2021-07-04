@@ -120,7 +120,7 @@ describe('Update', () => {
       .set({
         Authorization: `Bearer ${admin.token}`,
       })
-      .attach('image', path.resolve(__dirname, '../assets/image.jpg'))
+      .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
       .redirects(1);
     expect(res.body.icon).toBeDefined();
     done();

@@ -275,7 +275,7 @@ describe('Avatar update', () => {
       .set({
         Authorization: `Bearer ${user.token}`,
       })
-      .attach('image', path.resolve(__dirname, '../assets/image.jpg'))
+      .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
       .redirects(1);
     expect(res.body.avatar).toBeDefined();
     done();
