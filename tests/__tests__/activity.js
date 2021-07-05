@@ -132,7 +132,8 @@ describe('User activity is tracked when an user visits a channel', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ server: server._id, channel: channel._id });
+      .send({ server: server._id, channel: channel._id })
+      .redirects(1);
 
     // User visits another channel from the server
     const res = await request(app)

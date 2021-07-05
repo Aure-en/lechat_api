@@ -76,15 +76,14 @@ exports.activity_update_channel = [
           Activity.findOneAndUpdate(
             {
               _id: req.params.userId,
-              'servers.channels._id': req.body.channel,
             },
             {
               $set: {
-                'servers.$.channels': {
-                  _id: req.body.channel,
-                  timestamp: Date.now(),
-                },
+                'servers.$[server].channels.$[channel].timestamp': Date.now(),
               },
+            },
+            {
+              arrayFilters: [{ 'server._id': req.body.server }, { 'channel._id': req.body.channel }],
             },
           ).exec(callback);
         },
