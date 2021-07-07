@@ -10,7 +10,7 @@ const Category = require('../models/category');
 const queries = require('../utils/queries');
 
 // List of all servers (GET)
-exports.server_list = function (req, res, next) {
+exports.server_list = (req, res, next) => {
   Server.find({}, 'name').exec((err, servers) => {
     if (err) return next(err);
     return res.json(servers);
@@ -18,7 +18,7 @@ exports.server_list = function (req, res, next) {
 };
 
 // Detail of a specific server (GET)
-exports.server_detail = function (req, res, next) {
+exports.server_detail = (req, res, next) => {
   Server.findOne({ _id: req.params.serverId }).exec((err, server) => {
     if (err) return next(err);
     if (!server) return res.json({ error: 'Server not found' });
@@ -27,7 +27,7 @@ exports.server_detail = function (req, res, next) {
 };
 
 // List all messages in a server (GET)
-exports.server_messages = function (req, res, next) {
+exports.server_messages = (req, res, next) => {
   const limit = req.query.limit || 100;
   Message.find({
     server: req.params.serverId,
@@ -51,7 +51,7 @@ exports.server_messages = function (req, res, next) {
 };
 
 // List all members in a server (GET)
-exports.server_members = function (req, res, next) {
+exports.server_members = (req, res, next) => {
   User.find({ server: req.params.serverId }).exec((err, users) => {
     if (err) return next(err);
     return res.json(users);
@@ -100,12 +100,12 @@ exports.server_create = [
 
     async.parallel([
       // Save the server
-      function (callback) {
+      (callback) => {
         server.save(callback);
       },
 
       // Add the server to the user's server list
-      function (callback) {
+      (callback) => {
         User.findByIdAndUpdate(
           req.user._id,
           { $push: { server: server._id } },
@@ -131,7 +131,7 @@ exports.server_update = [
       // There are errors. Send them.
       return res.json({ errors: errors.array() });
     }
-    next();
+    return next();
   },
 
   // Form is valid. Save the server.
@@ -166,7 +166,7 @@ exports.server_update = [
       {},
       (err, server) => {
         if (err) return next(err);
-        res.redirect(303, server.url);
+        return res.redirect(303, server.url);
       },
     );
   },
@@ -179,32 +179,32 @@ exports.server_remove_icon = (req, res, next) => {
     {},
     (err, server) => {
       if (err) return next(err);
-      res.redirect(303, server.url);
+      return res.redirect(303, server.url);
     },
   );
 };
 
 // Delete a server (DELETE)
-exports.server_delete = function (req, res, next) {
+exports.server_delete = (req, res, next) => {
   async.parallel(
     [
       // Delete the server messages
-      function (callback) {
+      (callback) => {
         Message.deleteMany({ server: req.params.serverId }).exec(callback);
       },
 
       // Delete the server channels
-      function (callback) {
+      (callback) => {
         Channel.deleteMany({ server: req.params.serverId }).exec(callback);
       },
 
       // Delete the server categories
-      function (callback) {
+      (callback) => {
         Category.deleteMany({ server: req.params.serverId }).exec(callback);
       },
 
       // Delete the server from the users servers list.
-      function (callback) {
+      (callback) => {
         User.updateMany(
           { server: req.params.serverId },
           { $pull: { server: req.params.serverId } },
@@ -212,13 +212,13 @@ exports.server_delete = function (req, res, next) {
       },
 
       // Delete the server itself
-      function (callback) {
+      (callback) => {
         Server.findByIdAndDelete(req.params.serverId).exec(callback);
       },
     ],
     (err) => {
       if (err) return next(err);
-      res.redirect(303, '/servers');
+      return res.redirect(303, '/servers');
     },
   );
 };

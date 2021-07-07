@@ -4,7 +4,7 @@ const Message = require('../models/message');
 const queries = require('../utils/queries');
 
 // List all channels of a server (GET)
-exports.channel_list_server = function (req, res, next) {
+exports.channel_list_server = (req, res, next) => {
   Channel.find({ server: req.params.serverId }).populate('category').exec((err, channels) => {
     if (err) return next(err);
     return res.json(channels);
@@ -12,7 +12,7 @@ exports.channel_list_server = function (req, res, next) {
 };
 
 // List all channels of a category (GET)
-exports.channel_list = function (req, res, next) {
+exports.channel_list = (req, res, next) => {
   Channel.find({ category: req.params.categoryId }).exec((err, channels) => {
     if (err) return next(err);
     return res.json(channels);
@@ -20,7 +20,7 @@ exports.channel_list = function (req, res, next) {
 };
 
 // Detail of a specific channel (GET)
-exports.channel_detail = function (req, res, next) {
+exports.channel_detail = (req, res, next) => {
   Channel.findById(req.params.channelId).exec((err, channel) => {
     if (err) return next(err);
     if (!channel) {
@@ -31,9 +31,13 @@ exports.channel_detail = function (req, res, next) {
 };
 
 // List all messages in a channel (GET)
-exports.channel_messages = function (req, res, next) {
+exports.channel_messages = (req, res, next) => {
   const limit = req.query.limit || 100;
-  Message.find({ channel: req.params.channelId, ...queries.setPagination(req.query) })
+  Message.find({
+    channel: req.params.channelId,
+    ...queries.setQueries(req.query),
+    ...queries.setPagination(req.query),
+  })
     .sort({ timestamp: 1 })
     .limit(limit * 1) // Convert to number
     .populate('author')
@@ -46,6 +50,7 @@ exports.channel_messages = function (req, res, next) {
     })
     .exec((err, messages) => {
       if (err) return next(err);
+      res.set('X-Total-Count', messages.length);
       return res.json(messages);
     });
 };
@@ -61,7 +66,7 @@ exports.channel_create = [
     if (!errors.isEmpty()) {
       return res.json({ errors: errors.array() });
     }
-    next();
+    return next();
   },
 
   (req, res, next) => {
@@ -113,9 +118,9 @@ exports.channel_update = [
 ];
 
 // Delete a channel (DELETE)
-exports.channel_delete = function (req, res, next) {
+exports.channel_delete = (req, res, next) => {
   Channel.findByIdAndRemove(req.params.channelId, (err, channel) => {
     if (err) return next(err);
-    res.redirect(303, `/categories/${channel.category}/channels`);
+    return res.redirect(303, `/categories/${channel.category}/channels`);
   });
 };

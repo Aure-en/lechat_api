@@ -66,7 +66,7 @@ exports.auth_signup = [
     const errors = [];
 
     async.parallel([
-      function (callback) {
+      (callback) => {
         User.findOne({ email: req.body.email }).exec((err, user) => {
           if (err) return next(err);
           if (user) {
@@ -83,7 +83,7 @@ exports.auth_signup = [
         });
       },
 
-      function (callback) {
+      (callback) => {
         User.findOne({ username: req.body.username }).exec((err, user) => {
           if (err) return next(err);
           if (user) {

@@ -1,7 +1,7 @@
 const Message = require('../models/message');
 
 // Details of a specific message (GET)
-exports.message_detail = function (req, res, next) {
+exports.message_detail = (req, res, next) => {
   Message.findById(req.params.messageId)
     .populate('author', 'username')
     .populate({
@@ -21,7 +21,7 @@ exports.message_detail = function (req, res, next) {
 };
 
 // Create a message (POST)
-exports.message_create = function (req, res, next) {
+exports.message_create = (req, res, next) => {
   const data = {
     author: req.user._id,
     text: req.body.text,
@@ -39,28 +39,28 @@ exports.message_create = function (req, res, next) {
 
   message.save((err) => {
     if (err) return next(err);
-    res.redirect(303, message.url);
+    return res.redirect(303, message.url);
   });
 };
 
 // Update a message (PUT)
-exports.message_update = function (req, res, next) {
+exports.message_update = (req, res, next) => {
   Message.findByIdAndUpdate(
     req.params.messageId,
     { text: req.body.text, edited: true },
     {},
     (err, message) => {
       if (err) return next(err);
-      res.redirect(303, message.url);
+      return res.redirect(303, message.url);
     },
   );
 };
 
 // Delete a message
-exports.message_delete = function (req, res, next) {
+exports.message_delete = (req, res, next) => {
   Message.findByIdAndRemove(req.params.messageId, (err) => {
     if (err) return next(err);
-    res.json({ success: 'Message deleted.' });
+    return res.json({ success: 'Message deleted.' });
   });
 };
 
@@ -70,7 +70,7 @@ exports.message_add_reaction = [
     Message.findById(req.params.messageId, 'reaction').exec((err, result) => {
       if (err) return next(err);
       res.locals.message = result;
-      next();
+      return next();
     });
   },
 
@@ -107,7 +107,7 @@ exports.message_add_reaction = [
         },
       }).exec((err, updated) => {
         if (err) return next(err);
-        res.redirect(303, updated.url);
+        return res.redirect(303, updated.url);
       });
     }
   },
@@ -119,7 +119,7 @@ exports.message_delete_reaction = [
     Message.findById(req.params.messageId, 'reaction').exec((err, result) => {
       if (err) return next(err);
       res.locals.message = result;
-      next();
+      return next();
     });
   },
 
@@ -157,7 +157,7 @@ exports.message_delete_reaction = [
         reaction: reactions,
       }).exec((err, updated) => {
         if (err) return next(err);
-        res.redirect(303, updated.url);
+        return res.redirect(303, updated.url);
       });
     }
   },

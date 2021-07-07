@@ -4,7 +4,7 @@ const Message = require('../models/message');
 const queries = require('../utils/queries');
 
 // List a conversation informations
-exports.conversation_detail = function (req, res, next) {
+exports.conversation_detail = (req, res, next) => {
   Conversation.findById(req.params.conversationId)
     .populate('members', 'username _id avatar')
     .exec((err, conversation) => {
@@ -15,7 +15,7 @@ exports.conversation_detail = function (req, res, next) {
 };
 
 // Check if the user can access the permission
-exports.conversation_permission = function (req, res, next) {
+exports.conversation_permission = (req, res, next) => {
   Conversation.findById(req.params.conversationId, 'members').exec(
     (err, conversation) => {
       if (err) return next(err);
@@ -31,7 +31,7 @@ exports.conversation_permission = function (req, res, next) {
 };
 
 // Check existence of a conversation containing those members
-exports.conversation_existence = function (req, res, next) {
+exports.conversation_existence = (req, res, next) => {
   const members = req.query.members.split(',');
   Conversation.findOne({ members: { $all: members } })
     .populate('members', 'username _id avatar')
@@ -42,7 +42,7 @@ exports.conversation_existence = function (req, res, next) {
 };
 
 // List all the conversations of a specific user (GET)
-exports.conversation_list = function (req, res, next) {
+exports.conversation_list = (req, res, next) => {
   Conversation.find({ members: req.user._id }, '_id').populate('members').exec(
     (err, conversations) => {
       if (err) return next(err);
@@ -52,14 +52,14 @@ exports.conversation_list = function (req, res, next) {
 };
 
 // List messages from a conversation (GET)
-exports.conversation_messages = function (req, res, next) {
+exports.conversation_messages = (req, res, next) => {
   const limit = req.query.limit || 100;
   Message.find({
     conversation: req.params.conversationId,
     ...queries.setQueries(req.query),
     ...queries.setPagination(req.query),
   })
-    .sort({ timestamp: 1 })
+    .sort({ timestamp: -1 })
     .limit(limit * 1) // Convert to number
     .populate('author', 'username _id avatar')
     .populate({
@@ -71,6 +71,7 @@ exports.conversation_messages = function (req, res, next) {
     })
     .exec((err, messages) => {
       if (err) return next(err);
+      res.set('X-Total-Count', messages.length);
       return res.json(messages);
     });
 };

@@ -4,7 +4,7 @@ const Category = require('../models/category');
 const Channel = require('../models/channel');
 
 // List all categories of a server (GET)
-exports.category_list = function (req, res, next) {
+exports.category_list = (req, res, next) => {
   Category.find({ server: req.params.serverId }).populate('channel').exec((err, categories) => {
     if (err) return next(err);
     return res.json(categories);
@@ -12,7 +12,7 @@ exports.category_list = function (req, res, next) {
 };
 
 // Detail of a specific category (GET)
-exports.category_detail = function (req, res, next) {
+exports.category_detail = (req, res, next) => {
   Category.findOne({ _id: req.params.categoryId }).exec((err, category) => {
     if (err) return next(err);
     if (!category) {
@@ -69,14 +69,14 @@ exports.category_update = [
         if (err) return next(err);
         // Use 303 status to redirect to GET.
         // Otherwise, it infinitely makes PUT requests.
-        res.redirect(303, category.url);
+        return res.redirect(303, category.url);
       },
     );
   },
 ];
 
 // Delete a category (DELETE)
-exports.category_delete = function (req, res, next) {
+exports.category_delete = (req, res, next) => {
   async.parallel({
     category(callback) {
       Category.findById(req.params.categoryId).exec(callback);
@@ -95,7 +95,7 @@ exports.category_delete = function (req, res, next) {
     // If it has no channels, delete it.
     Category.findByIdAndRemove(req.params.categoryId, (err, category) => {
       if (err) return next(err);
-      res.redirect(303, `/servers/${category._id}/categories`);
+      return res.redirect(303, `/servers/${category._id}/categories`);
     });
   });
 };

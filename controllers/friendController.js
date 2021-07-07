@@ -1,7 +1,7 @@
 const Friend = require('../models/friend');
 
 // List all of the user friends
-exports.friend_list = function (req, res, next) {
+exports.friend_list = (req, res, next) => {
   Friend.find({
     status: true,
     $or: [{ sender: req.params.userId }, { recipient: req.params.userId }],
@@ -14,7 +14,7 @@ exports.friend_list = function (req, res, next) {
 };
 
 // List all pending friend requests
-exports.friend_list_pending = function (req, res, next) {
+exports.friend_list_pending = (req, res, next) => {
   Friend.find({
     status: false,
     $or: [{ sender: req.params.userId }, { recipient: req.params.userId }],

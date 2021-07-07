@@ -4,7 +4,7 @@ const path = require('path');
 const Emote = require('../models/emote');
 
 // List all emotes
-exports.emote_list = function (req, res, next) {
+exports.emote_list = (req, res, next) => {
   Emote.find().exec((err, emotes) => {
     if (err) return next(err);
     return res.json(emotes);
@@ -12,7 +12,7 @@ exports.emote_list = function (req, res, next) {
 };
 
 // Detail of a specific emote
-exports.emote_detail = function (req, res, next) {
+exports.emote_detail = (req, res, next) => {
   Emote.findById(req.params.emoteId).exec((err, emote) => {
     if (err) return next(err);
     if (!emote) return res.json({ error: 'Emote not found.' });
@@ -168,7 +168,7 @@ exports.emote_update = [
 ];
 
 // Delete a emote
-exports.emote_delete = function (req, res, next) {
+exports.emote_delete = (req, res, next) => {
   Emote.findByIdAndRemove(req.params.emoteId, (err) => {
     if (err) return next(err);
     res.redirect(303, '/emotes');
