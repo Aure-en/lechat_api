@@ -10,6 +10,9 @@
   "jest": {
     "testEnvironment": "node"
   },
+  "engines": {
+    "node": "14.7.0"
+  },
   "dependencies": {
     "async": "^3.2.0",
     "bcryptjs": "^2.4.3",

@@ -11,10 +11,14 @@ const queries = require('../utils/queries');
 
 // List of all servers (GET)
 exports.server_list = (req, res, next) => {
-  Server.find({}, 'name').exec((err, servers) => {
-    if (err) return next(err);
-    return res.json(servers);
-  });
+  const limit = req.query.limit || 12;
+  Server.find({ ...queries.setPagination(req.query) }, 'name icon about')
+    .sort(queries.setSort(req.query))
+    .limit(limit * 1) // Convert to number
+    .exec((err, servers) => {
+      if (err) return next(err);
+      return res.json(servers);
+    });
 };
 
 // Detail of a specific server (GET)
@@ -87,7 +91,9 @@ exports.server_create = [
     if (req.file) {
       data.icon = {
         name: req.file.filename,
-        data: fs.readFileSync(path.join(__dirname, `../temp/${req.file.filename}`)),
+        data: fs.readFileSync(
+          path.join(__dirname, `../temp/${req.file.filename}`)
+        ),
         contentType: req.file.mimetype,
       };
       // Delete the image from the disk after using it
@@ -98,24 +104,27 @@ exports.server_create = [
 
     const server = new Server(data);
 
-    async.parallel([
-      // Save the server
-      (callback) => {
-        server.save(callback);
-      },
+    async.parallel(
+      [
+        // Save the server
+        (callback) => {
+          server.save(callback);
+        },
 
-      // Add the server to the user's server list
-      (callback) => {
-        User.findByIdAndUpdate(
-          req.user._id,
-          { $push: { server: server._id } },
-          {},
-        ).exec(callback);
-      },
-    ], (err) => {
-      if (err) return next(err);
-      return res.redirect(303, server.url);
-    });
+        // Add the server to the user's server list
+        (callback) => {
+          User.findByIdAndUpdate(
+            req.user._id,
+            { $push: { server: server._id } },
+            {}
+          ).exec(callback);
+        },
+      ],
+      (err) => {
+        if (err) return next(err);
+        return res.redirect(303, server.url);
+      }
+    );
   },
 ];
 
@@ -146,7 +155,7 @@ exports.server_update = [
       const icon = {
         name: req.file.filename,
         data: fs.readFileSync(
-          path.join(__dirname, `../temp/${req.file.filename}`),
+          path.join(__dirname, `../temp/${req.file.filename}`)
         ),
         contentType: req.file.mimetype,
       };
@@ -160,15 +169,10 @@ exports.server_update = [
       server.icon = icon;
     }
 
-    Server.findByIdAndUpdate(
-      req.params.serverId,
-      server,
-      {},
-      (err, server) => {
-        if (err) return next(err);
-        return res.redirect(303, server.url);
-      },
-    );
+    Server.findByIdAndUpdate(req.params.serverId, server, {}, (err, server) => {
+      if (err) return next(err);
+      return res.redirect(303, server.url);
+    });
   },
 ];
 
@@ -180,7 +184,7 @@ exports.server_remove_icon = (req, res, next) => {
     (err, server) => {
       if (err) return next(err);
       return res.redirect(303, server.url);
-    },
+    }
   );
 };
 
@@ -207,7 +211,7 @@ exports.server_delete = (req, res, next) => {
       (callback) => {
         User.updateMany(
           { server: req.params.serverId },
-          { $pull: { server: req.params.serverId } },
+          { $pull: { server: req.params.serverId } }
         ).exec(callback);
       },
 
@@ -219,6 +223,6 @@ exports.server_delete = (req, res, next) => {
     (err) => {
       if (err) return next(err);
       return res.redirect(303, '/servers');
-    },
+    }
   );
 };

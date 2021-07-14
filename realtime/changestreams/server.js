@@ -28,7 +28,7 @@ module.exports = {
       }
 
       // On members update
-      if (change.updateDescription.updatedFields.members) {
+      if (change.operationType === 'update' && change.updateDescription.updatedFields.members) {
         io.in(change.fullDocument._id.toString()).emit('member update');
       }
     });

@@ -34,3 +34,8 @@ exports.setPagination = (options) => {
   const { last_key } = options;
   if (last_key) return { _id: { $lt: last_key } };
 };
+
+exports.setSort = (options) => {
+  const { sort_by, order } = options;
+  return { [sort_by]: order === 'asc' ? 1 : -1 };
+};
