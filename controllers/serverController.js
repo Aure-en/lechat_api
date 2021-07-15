@@ -81,7 +81,7 @@ exports.server_create = [
   (req, res, next) => {
     const data = {
       name: req.body.name,
-      admin: req.user._id,
+      admin: req.user._id.toString(),
       about: req.body.about,
       rules: req.body.rules,
       timestamp: Date.now(),
@@ -114,7 +114,7 @@ exports.server_create = [
         // Add the server to the user's server list
         (callback) => {
           User.findByIdAndUpdate(
-            req.user._id,
+            req.user._id.toString(),
             { $push: { server: server._id } },
             {}
           ).exec(callback);

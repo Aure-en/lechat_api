@@ -23,7 +23,7 @@ exports.message_detail = (req, res, next) => {
 // Create a message (POST)
 exports.message_create = (req, res, next) => {
   const data = {
-    author: req.user._id,
+    author: req.user._id.toString(),
     text: req.body.text,
     timestamp: Date.now(),
   };
@@ -85,7 +85,7 @@ exports.message_add_reaction = [
       let reactions = res.locals.message.reaction;
       reactions = reactions.map((reaction) => {
         if (reaction.emote.toString() === req.params.emoteId) {
-          if (!reaction.users.includes(req.user._id)) reaction.users.push(req.user._id);
+          if (!reaction.users.includes(req.user._id.toString())) reaction.users.push(req.user._id.toString());
         }
         return reaction;
       });
@@ -102,7 +102,7 @@ exports.message_add_reaction = [
         $push: {
           reaction: {
             emote: req.params.emoteId,
-            users: [req.user._id],
+            users: [req.user._id.toString()],
           },
         },
       }).exec((err, updated) => {
@@ -146,7 +146,7 @@ exports.message_delete_reaction = [
           return {
             emote: reaction.emote,
             users: reaction.users.filter(
-              (user) => user.toString() !== req.user._id,
+              (user) => user.toString() !== req.user._id.toString(),
             ),
           };
         }

@@ -58,6 +58,7 @@ exports.check_admin = function (req, res, next) {
         .exec((err, channel) => {
           if (err) return next(err);
           if (!channel) return res.json({ error: 'Channel not found.' });
+          console.log(req.user._id.toString(), channel.server.admin.toString());
           if (req.user._id.toString() === channel.server.admin.toString()) {
             res.locals.isAllowed = true;
           }

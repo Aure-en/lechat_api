@@ -40,7 +40,7 @@ exports.friend_add = [
 
   (req, res, next) => {
     // Check if the user already sent a request to that user
-    Friend.findOne({ sender: req.user._id, recipient: req.params.userId }).exec(
+    Friend.findOne({ sender: req.user._id.toString(), recipient: req.params.userId }).exec(
       (err, friend) => {
         if (err) return next(err);
         if (friend) {
@@ -56,14 +56,14 @@ exports.friend_add = [
   (req, res, next) => {
     // If not, send the request.
     const request = new Friend({
-      sender: req.user._id,
+      sender: req.user._id.toString(),
       recipient: req.params.userId,
       status: false,
     });
 
     request.save((err) => {
       if (err) return next(err);
-      res.redirect(303, `/users/${req.user._id}/pending`);
+      res.redirect(303, `/users/${req.user._id.toString()}/pending`);
     });
   },
 ];
@@ -74,7 +74,7 @@ exports.friend_accept = [
     // Check that the user is the one the request was sent to.
     Friend.findById(req.params.friendId).exec((err, friend) => {
       if (err) return next(err);
-      if (req.user._id !== friend.recipient.toString()) {
+      if (req.user._id.toString() !== friend.recipient.toString()) {
         return res.status(403).json({
           error: 'You do not have permission to perform this operation.',
         });
@@ -90,7 +90,7 @@ exports.friend_accept = [
       {},
       (err) => {
         if (err) return next(err);
-        res.redirect(303, `/users/${req.user._id}/friends`);
+        res.redirect(303, `/users/${req.user._id.toString()}/friends`);
       },
     );
   },
@@ -103,8 +103,8 @@ exports.friend_delete = [
     Friend.findById(req.params.friendId).exec((err, friend) => {
       if (err) return next(err);
       if (
-        req.user._id !== friend.sender.toString()
-        && req.user._id !== friend.recipient.toString()
+        req.user._id.toString() !== friend.sender.toString()
+        && req.user._id.toString() !== friend.recipient.toString()
       ) {
         return res.status(403).json({
           error: 'You do not have permission to perform this operation.',
@@ -118,7 +118,7 @@ exports.friend_delete = [
   (req, res, next) => {
     Friend.findByIdAndRemove(req.params.friendId).exec((err) => {
       if (err) return next(err);
-      res.redirect(303, `/users/${req.user._id}/friends`);
+      res.redirect(303, `/users/${req.user._id.toString()}/friends`);
     });
   },
 ];

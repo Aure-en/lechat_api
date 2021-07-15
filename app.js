@@ -20,6 +20,7 @@ changestreams.init(io);
 io.on('connection', (socket) => {
   console.log('Connection success', socket.id);
   listeners.authentification(socket);
+  listeners.join(socket);
 
   socket.on('disconnect', () => {
     console.log('Connection disconnected', socket.id);

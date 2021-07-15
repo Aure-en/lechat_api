@@ -7,7 +7,7 @@ module.exports = {
     changeStream = Server.watch([], { fullDocument: 'updateLookup' });
     changeStream.on('change', (change) => {
       console.log('SERVER CHANGE', change);
-      if (change.operationType === 'delete') return;
+      if (change.operationType === 'delete' || change.operationType === 'insert') return;
 
       // On settings update (name, icon, description)...
       const settings = ['name', 'icon', 'description'];

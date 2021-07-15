@@ -85,7 +85,7 @@ exports.user_update_username = [
     // Check if the username is already taken
     User.findOne({ username: req.body.username }).exec((err, user) => {
       if (err) return next(err);
-      if (user && user._id.toString() !== req.user._id) {
+      if (user && user._id.toString() !== req.user._id.toString()) {
         return res.json({
           errors: [
             {
@@ -243,7 +243,7 @@ exports.user_update_email = [
   (req, res, next) => {
     User.findOne({ email: req.body.email }).exec((err, user) => {
       if (err) return next(err);
-      if (user && user._id.toString() !== req.user._id) {
+      if (user && user._id.toString() !== req.user._id.toString()) {
         return res.json({
           errors: [
             {
