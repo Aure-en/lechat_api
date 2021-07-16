@@ -21,6 +21,7 @@ io.on('connection', (socket) => {
   console.log('Connection success', socket.id);
   listeners.authentification(socket);
   listeners.join(socket);
+  listeners.typing(socket, io);
 
   socket.on('disconnect', () => {
     console.log('Connection disconnected', socket.id);

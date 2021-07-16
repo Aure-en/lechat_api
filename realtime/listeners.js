@@ -1,10 +1,15 @@
 const Conversation = require('../models/conversation');
 
+/**
+ * When a user is authentified, join the rooms corresponding
+ * to the servers / conversations they are following.
+ * @param {*} socket
+ */
 exports.authentification = (socket) => {
   socket.on('authentification', async (userData) => {
     console.log(userData);
     const user = JSON.parse(userData);
-    console.log("AUTHENTIFICATION", user);
+    console.log('AUTHENTIFICATION', user);
 
     // Save the user data
     socket.user = user._id;
@@ -27,6 +32,10 @@ exports.authentification = (socket) => {
   });
 };
 
+/**
+ * When a user join a location, join the corresponding room.
+ * @param {*} socket
+ */
 exports.join = (socket) => {
   /**
    * @params {object} data:
@@ -34,10 +43,21 @@ exports.join = (socket) => {
    *  - users (users who must join the location room)
    * The socket will join the corresponding room to listen to changes.
    */
-  socket.on('join', async (data) => {
-    console.log("JOIN", socket.user, data);
+  socket.on('join', (data) => {
     if (data.users.includes(socket.user)) {
       socket.join(data.location);
     }
+  });
+};
+
+/**
+ * When a user starts / stops typing in a room, tells
+ * the other clients.
+ * @param {*} socket
+ */
+
+exports.typing = (socket, io) => {
+  socket.on('typing', (data) => {
+    io.emit('typing', data);
   });
 };
