@@ -7,6 +7,7 @@ module.exports = {
     changeStream = Activity.watch([], { fullDocument: 'updateLookup' });
     changeStream.on('change', (change) => {
       // On change, send the activity change to the user's room.
+      console.log("ACTIVITY", change);
 
       // Sort the activity by timestamps to see which room the user visited last.
       io.in(change.fullDocument._id.toString()).emit(

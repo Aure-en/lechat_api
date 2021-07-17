@@ -19,8 +19,11 @@ changestreams.init(io);
 
 io.on('connection', (socket) => {
   console.log('Connection success', socket.id);
-  listeners.authentification(socket);
+  listeners.authentication(socket);
+  listeners.deauthentication(socket);
   listeners.join(socket);
+  listeners.leave(socket);
+  listeners.disconnect(socket);
   listeners.typing(socket, io);
 
   socket.on('disconnect', () => {

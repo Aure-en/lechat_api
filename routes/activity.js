@@ -10,13 +10,22 @@ router.post('/', activityController.activity_create);
 router.get('/:userId', activityController.activity_user);
 
 // PUT to update the activity of a specific user
+// POST to update the activity with navigator.sendBeacon()
 router.put(
   '/:userId/servers',
   activityController.activity_update_server,
   activityController.activity_update_channel,
 );
 
+router.post(
+  '/:userId/servers',
+  activityController.activity_update_server,
+  activityController.activity_update_channel,
+);
+
 router.put('/:userId/conversations', activityController.activity_update_conversation);
+
+router.post('/:userId/conversations', activityController.activity_update_conversation);
 
 // DELETE to delete a user's activity
 router.delete('/:userId', activityController.activity_delete);

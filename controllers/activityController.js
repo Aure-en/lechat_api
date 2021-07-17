@@ -26,6 +26,7 @@ exports.activity_update_server = [
 
   // Check for errors
   (req, res, next) => {
+    console.log("UPDATE", req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.json({ errors: errors.array() });
