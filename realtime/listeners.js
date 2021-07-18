@@ -10,7 +10,7 @@ exports.authentication = (socket) => {
     const user = JSON.parse(userData);
 
     // Save the user data
-    socket.user = user._id;
+    socket.user = { _id: user._id, username: user.username };
 
     // Listen to user changes
     socket.join(user._id);
@@ -35,9 +35,14 @@ exports.authentication = (socket) => {
  * - Leave the rooms he was in.
  * @param {*} socket
 */
-exports.deauthentication = (socket) => {
+exports.deauthentication = (socket, io) => {
   socket.on('deauthentication', () => {
     socket.rooms.forEach((room) => socket.leave(room));
+    io.emit('typing', {
+      location: socket.room,
+      user: socket.user.username,
+      typing: false,
+    });
   });
 };
 
@@ -53,9 +58,20 @@ exports.join = (socket) => {
    * The socket will join the corresponding room to listen to changes.
    */
   socket.on('join', (data) => {
-    if (data.users.includes(socket.user)) {
+    if (data.users.includes(socket.user._id)) {
       socket.join(data.location);
     }
+  });
+};
+
+/**
+ * Saves the room the user is currently in to remove him
+ * from the room's typing users list easily.
+ * @param {*} socket
+ */
+exports.join_room = (socket) => {
+  socket.on('join room', (room) => {
+    socket.room = room;
   });
 };
 
@@ -71,7 +87,7 @@ exports.leave = (socket) => {
    * The socket will join the corresponding room to listen to changes.
    */
   socket.on('leave', (data) => {
-    if (data.users.includes(socket.user)) {
+    if (data.users.includes(socket.user._id)) {
       socket.leave(data.location);
     }
   });
@@ -84,11 +100,25 @@ exports.leave = (socket) => {
  */
 
 exports.typing = (socket, io) => {
+  /**
+   * data {object}
+   * {
+   *   location {string} - channel or conversation id
+   *   user {string} - username
+   *   typing {boolean} - false
+   * }
+   */
   socket.on('typing', (data) => {
     io.emit('typing', data);
   });
 };
 
-exports.disconnect = (socket) => {
-  socket.on('disconnect', () => console.log('TEST'));
+exports.disconnect = (socket, io) => {
+  socket.on('disconnect', () => {
+    io.emit('typing', {
+      location: socket.room,
+      user: socket.user.username,
+      typing: false,
+    });
+  });
 };

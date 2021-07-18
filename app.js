@@ -20,10 +20,10 @@ changestreams.init(io);
 io.on('connection', (socket) => {
   console.log('Connection success', socket.id);
   listeners.authentication(socket);
-  listeners.deauthentication(socket);
+  listeners.deauthentication(socket, io);
   listeners.join(socket);
-  listeners.leave(socket);
-  listeners.disconnect(socket);
+  listeners.join_room(socket);
+  listeners.disconnect(socket, io);
   listeners.typing(socket, io);
 
   socket.on('disconnect', () => {
