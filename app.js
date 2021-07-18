@@ -37,6 +37,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(cors({
+  credentials: true,
+  origin: true,
   exposedHeaders: ['X-Total-Count'],
 }));
 app.use(logger('dev'));
