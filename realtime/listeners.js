@@ -12,6 +12,8 @@ exports.authentication = (socket) => {
     // Save the user data
     socket.user = { _id: user._id, username: user.username };
 
+    console.log(socket.user);
+
     // Listen to user changes
     socket.join(user._id);
 
@@ -28,6 +30,8 @@ exports.authentication = (socket) => {
         });
       },
     );
+
+    console.log(socket.rooms);
   });
 };
 
@@ -115,10 +119,12 @@ exports.typing = (socket, io) => {
 
 exports.disconnect = (socket, io) => {
   socket.on('disconnect', () => {
-    io.emit('typing', {
-      location: socket.room,
-      user: socket.user.username,
-      typing: false,
-    });
+    if (socket.user) {
+      io.emit('typing', {
+        location: socket.room,
+        user: socket.user.username,
+        typing: false,
+      });
+    }
   });
 };

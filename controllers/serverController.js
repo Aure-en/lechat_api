@@ -56,7 +56,7 @@ exports.server_messages = (req, res, next) => {
 
 // List all members in a server (GET)
 exports.server_members = (req, res, next) => {
-  User.find({ server: req.params.serverId }).exec((err, users) => {
+  User.find({ server: req.params.serverId }, '-password -email').exec((err, users) => {
     if (err) return next(err);
     return res.json(users);
   });

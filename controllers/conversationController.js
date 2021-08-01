@@ -43,7 +43,7 @@ exports.conversation_existence = (req, res, next) => {
 
 // List all the conversations of a specific user (GET)
 exports.conversation_list = (req, res, next) => {
-  Conversation.find({ members: req.user._id }, '_id').populate('members').exec(
+  Conversation.find({ members: req.user._id }, '_id').populate('members', 'username _id avatar').exec(
     (err, conversations) => {
       if (err) return next(err);
       return res.json(conversations);
