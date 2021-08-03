@@ -4,6 +4,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
+const compression = require('compression');
+const helmet = require('helmet');
 require('dotenv').config({ path: path.resolve(__dirname, '.env.local') });
 require('./auth/passport');
 require('./mongo');
@@ -18,7 +20,6 @@ const listeners = require('./realtime/listeners');
 changestreams.init(io);
 
 io.on('connection', (socket) => {
-  console.log('Connection success', socket.id);
   listeners.authentication(socket);
   listeners.deauthentication(socket, io);
   listeners.join(socket);
@@ -27,15 +28,12 @@ io.on('connection', (socket) => {
   listeners.typing(socket, io);
 
   socket.on('disconnect', () => {
-    console.log('Connection disconnected', socket.id);
     socket.removeAllListeners();
   });
 });
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
-
+app.use(compression());
+app.use(helmet());
 app.use(cors({
   credentials: true,
   origin: true,
@@ -56,7 +54,6 @@ app.use((req, res, next) => {
 
 // error handler
 app.use((err, req, res, next) => {
-  console.log(err);
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
-const mongoDb = `mongodb+srv://Aurelie:${process.env.MONGODB_PASSWORD}@lechat.6r12k.mongodb.net/Lechat?retryWrites=true&w=majority`;
-mongoose.connect(mongoDb, { useNewUrlParser: true, useUnifiedTopology: true });
+const dev_db_url = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@lechat.6r12k.mongodb.net/Lechat?retryWrites=true&w=majority`;
+const mongoDB = process.env.MONGODB_URI || dev_db_url;
+mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const db = mongoose.connection;
 db.on('open', () => console.log('mongo connection'));
 db.on('error', console.error.bind(console, 'mongo connection error'));
