@@ -23,9 +23,15 @@ router.post(
   activityController.activity_update_channel,
 );
 
-router.put('/:userId/conversations', activityController.activity_update_conversation);
+router.put(
+  '/:userId/conversations',
+  activityController.activity_update_conversation,
+);
 
-router.post('/:userId/conversations', activityController.activity_update_conversation);
+router.post(
+  '/:userId/conversations',
+  activityController.activity_update_conversation,
+);
 
 // DELETE to delete a user's activity
 router.delete('/:userId', activityController.activity_delete);

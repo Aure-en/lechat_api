@@ -8,36 +8,31 @@ const router = express.Router({ mergeParams: true });
 // GET a specific channel
 router.get('/:channelId', channelController.channel_detail);
 
-// PUT to update a channel
-router.put(
-  '/:channelId',
+// GET to read all the messages in a channel
+router.get('/:channelId/messages', channelController.channel_messages);
+
+// Permissions for incoming routes
+router.use(
+  ['/:channelId', '/:channelId/pins', '/:channelId/pins/*'],
   checkAuth.check_user,
   checkAuth.check_admin,
   checkAuth.check_permission,
+);
+
+// PUT to update a channel
+router.put(
+  '/:channelId',
   channelController.channel_update,
 );
 
 // DELETE a channel
 router.delete(
   '/:channelId',
-  checkAuth.check_user,
-  checkAuth.check_admin,
-  checkAuth.check_permission,
   channelController.channel_delete,
 );
 
-// GET to read all the messages in a channel
-router.get('/:channelId/messages', channelController.channel_messages);
-
 // -- Pins --
 // POST to create the pin document
-router.use(
-  ['/:channelId/pins', '/:channelId/pins/*'],
-  checkAuth.check_user,
-  checkAuth.check_admin,
-  checkAuth.check_permission,
-);
-
 router.post(
   '/:channelId/pins',
   pinController.pin_create,

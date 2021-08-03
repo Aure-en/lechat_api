@@ -37,20 +37,13 @@ const realtime = (io, change, section) => {
   }
 };
 
-module.exports = {
-  init: (io) => {
-    categoryStream = Category.watch([], { fullDocument: 'updateLookup' });
-    categoryStream.on('change', (change) => {
-      realtime(io, change, 'category');
-    });
-    channelStream = Channel.watch([], { fullDocument: 'updateLookup' });
-    channelStream.on('change', (change) => {
-      realtime(io, change, 'channel');
-    });
-  },
-
-  close: () => {
-    categoryStream.close();
-    channelStream.close();
-  },
+exports.init = (io) => {
+  categoryStream = Category.watch([], { fullDocument: 'updateLookup' });
+  categoryStream.on('change', (change) => {
+    realtime(io, change, 'category');
+  });
+  channelStream = Channel.watch([], { fullDocument: 'updateLookup' });
+  channelStream.on('change', (change) => {
+    realtime(io, change, 'channel');
+  });
 };
