@@ -1,8 +1,10 @@
 const passport = require('passport');
-const Server = require('../models/server');
 const Category = require('../models/category');
 const Channel = require('../models/channel');
+const Conversation = require('../models/conversation');
+const Friend = require('../models/friend');
 const Message = require('../models/message');
+const Server = require('../models/server');
 const User = require('../models/user');
 
 // Check that the user is logged in
@@ -118,4 +120,20 @@ exports.check_permission = function (req, res, next) {
       });
   }
   return next();
+};
+
+// Check if the user is a member of a conversation
+exports.check_conversation = (req, res, next) => {
+  Conversation.findById(req.params.conversationId, 'members').exec(
+    (err, conversation) => {
+      if (err) return next(err);
+      if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
+      if (!conversation.members.includes(req.user._id)) {
+        return res
+          .status(403)
+          .json({ error: 'You cannot access this conversation.' });
+      }
+      next();
+    },
+  );
 };

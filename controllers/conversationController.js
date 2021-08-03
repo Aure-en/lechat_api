@@ -14,22 +14,6 @@ exports.conversation_detail = (req, res, next) => {
     });
 };
 
-// Check if the user can access the permission
-exports.conversation_permission = (req, res, next) => {
-  Conversation.findById(req.params.conversationId, 'members').exec(
-    (err, conversation) => {
-      if (err) return next(err);
-      if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
-      if (!conversation.members.includes(req.user._id)) {
-        return res
-          .status(403)
-          .json({ error: 'You cannot access this conversation.' });
-      }
-      next();
-    },
-  );
-};
-
 // Check existence of a conversation containing those members
 exports.conversation_existence = (req, res, next) => {
   const members = req.query.members.split(',');

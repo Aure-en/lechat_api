@@ -18,7 +18,7 @@ router.get('/:conversationId', conversationController.conversation_detail);
 router.use(
   '/:conversationId/*',
   checkAuth.check_user,
-  conversationController.conversation_permission,
+  checkAuth.check_conversation,
 );
 
 // Get conversation messages
