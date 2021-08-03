@@ -83,7 +83,7 @@ describe('Update', () => {
 
   test('Anonymous users cannot edit a server', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}/name`)
+      .put(`/servers/${server._id}`)
       .send({ name: 'Renamed' });
     expect(res.status).toBe(401); // Unauthorized
     done();
@@ -91,7 +91,7 @@ describe('Update', () => {
 
   test('Users that do not have permissions cannot edit the server', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}/name`)
+      .put(`/servers/${server._id}`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ describe('Update', () => {
 
   test('Users with permission can edit the server', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}/name`)
+      .put(`/servers/${server._id}`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
@@ -116,10 +116,11 @@ describe('Update', () => {
 
   test('The server icon can be edited', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}/icon`)
+      .put(`/servers/${server._id}`)
       .set({
         Authorization: `Bearer ${admin.token}`,
       })
+      .field('name', 'Name')
       .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
       .redirects(1);
     expect(res.body.icon).toBeDefined();
@@ -128,7 +129,7 @@ describe('Update', () => {
 
   test('The server icon can be removed', async (done) => {
     const res = await request(app)
-      .put(`/servers/${server._id}/icon`)
+      .put(`/servers/${server._id}`)
       .set({
         Authorization: `Bearer ${admin.token}`,
       })
@@ -207,7 +208,7 @@ describe('Members', () => {
         'Content-Type': 'application/json',
       })
       .redirects(1);
-    expect(res.body.server).toEqual(expect.arrayContaining([server._id]));
+    expect(res.body.server).toEqual(expect.arrayContaining([{ ...server, members: 2 }]));
     done();
   });
 
@@ -219,7 +220,7 @@ describe('Members', () => {
         'Content-Type': 'application/json',
       })
       .redirects(1);
-    expect(res.body.server).not.toEqual(expect.arrayContaining([server._id]));
+    expect(res.body.server).not.toEqual(expect.arrayContaining([server]));
     done();
   });
 });

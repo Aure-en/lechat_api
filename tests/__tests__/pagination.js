@@ -71,6 +71,7 @@ beforeAll(async (done) => {
   );
   firstKey = keyRes.body[limit - 1]._id;
   secondKey = keyRes.body[limit * 2 - 1]._id;
+
   done();
 });
 
@@ -84,9 +85,6 @@ describe('Pagination', () => {
     expect(res.body.length).toBe(5);
     expect(res.body[0].text).toBe('10');
     expect(res.body[res.body.length - 1].text).toBe('6');
-    [...Array(5).keys()].map((key) => {
-      expect(res.body.sort((a, b) => +a.text - +b.text)[key]).toEqual(res.body[key]);
-    });
     done();
   });
 

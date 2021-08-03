@@ -69,7 +69,7 @@ describe('Server update', () => {
       .redirects(1);
 
     const res = await request(app).get(`/users/${user.user._id}`);
-    expect(res.body.server).toEqual(expect.arrayContaining([serverRes.body._id]));
+    expect(res.body.server).toEqual(expect.arrayContaining([serverRes.body]));
     done();
   });
 
@@ -86,7 +86,7 @@ describe('Server update', () => {
       .post(`/users/${user.user._id}/servers/${server._id}`)
       .set({ Authorization: `Bearer ${user.token}` })
       .redirects(1);
-    expect(res.body.server).toEqual(expect.arrayContaining([server._id]));
+    expect(res.body.server).toEqual(expect.arrayContaining([{ ...server, members: 2 }]));
     done();
   });
 
@@ -368,7 +368,7 @@ describe('Account deletion', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ password: 'user_password' });
+      .send({ password: 'new_password' });
     expect(res.body.success).toBe('Account has been deleted.');
     done();
   });

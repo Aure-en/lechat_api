@@ -10,27 +10,20 @@ let user;
 beforeAll(async (done) => {
   await dbConnect();
 
-  // Create two users
-  const recipientRes = await request(app).post('/auth/signup').send({
-    username: 'Recipient',
-    email: 'recipient@user.com',
-    password: 'recipient_password',
-  });
-  recipient = recipientRes.body;
+  // Users who will be friend
+  const createUser = async (username) => {
+    const res = await request(app).post('/auth/signup').send({
+      username: `${username}`,
+      email: `${username}@user.com`,
+      password: `${username}_password`,
+    });
+    return res.body;
+  };
 
-  const senderRes = await request(app).post('/auth/signup').send({
-    username: 'Sender',
-    email: 'sender@user.com',
-    password: 'sender_password',
-  });
-  sender = senderRes.body;
+  recipient = await createUser('recipient');
+  sender = await createUser('sender');
+  user = await createUser('user');
 
-  const userRes = await request(app).post('/auth/signup').send({
-    username: 'User',
-    email: 'user@user.com',
-    password: 'user_password',
-  });
-  user = userRes.body;
   done();
 });
 afterAll(async () => dbDisconnect());
@@ -61,7 +54,7 @@ describe('Sending a friend request', () => {
       })
       .redirects(1);
     expect(
-      res.body.filter((pending) => pending.sender === sender.user._id).length
+      res.body.filter((pending) => pending.sender._id === sender.user._id).length,
     ).toBeGreaterThan(0);
     done();
   });
@@ -83,9 +76,8 @@ describe('Accepting a friend request', () => {
       })
       .redirects(1);
     [friendRequest] = res.body.filter(
-      (request) =>
-        request.sender === sender.user._id &&
-        request.recipient === recipient.user._id
+      (request) => request.sender._id === sender.user._id
+        && request.recipient._id === recipient.user._id,
     );
     done();
   });
@@ -108,7 +100,7 @@ describe('Accepting a friend request', () => {
       })
       .redirects(1);
     expect(
-      res.body.filter((friend) => friend.sender === sender.user._id).length
+      res.body.filter((friend) => friend.sender._id === sender.user._id).length,
     ).toBeGreaterThan(0);
     done();
   });
@@ -130,9 +122,8 @@ describe('Refusing or deleting a request', () => {
       })
       .redirects(1);
     [friendRequest] = res.body.filter(
-      (request) =>
-        request.sender === sender.user._id &&
-        request.recipient === recipient.user._id
+      (request) => request.sender._id === sender.user._id
+        && request.recipient._id === recipient.user._id,
     );
     done();
   });
@@ -156,10 +147,9 @@ describe('Refusing or deleting a request', () => {
       .redirects(1);
     expect(
       res.body.filter(
-        (friend) =>
-          friend.sender === sender.user._id &&
-          friend.recipient === recipient.user._id
-      ).length
+        (friend) => friend.sender._id === sender.user._id
+          && friend.recipient._id === recipient.user._id,
+      ).length,
     ).toBe(0);
     done();
   });

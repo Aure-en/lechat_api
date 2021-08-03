@@ -59,7 +59,10 @@ describe('Conversation creation', () => {
       .send({ members: `["${user1.user._id}", "${user2.user._id}"]` })
       .redirects(1);
     expect(res.body.members).toEqual(
-      expect.arrayContaining([user1.user._id, user2.user._id]),
+      expect.arrayContaining([
+        { _id: user1.user._id, username: user1.user.username },
+        { _id: user2.user._id, username: user2.user.username },
+      ]),
     );
     done();
   });
@@ -80,7 +83,7 @@ describe('Find conversations', () => {
     done();
   });
 
-  test.only('A conversation can be found from its members', async (done) => {
+  test('A conversation can be found from its members', async (done) => {
     const res = await request(app)
       .get(`/conversations?members=${user1.user._id},${user2.user._id}`)
       .set({
