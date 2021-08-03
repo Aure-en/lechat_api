@@ -1,8 +1,9 @@
 const Pin = require('../models/pin');
 
 exports.pin_create = (req, res, next) => {
+  const room = req.params.channelId || req.params.conversationId;
   const pin = new Pin({
-    room: req.body.room,
+    room,
     messages: [],
   });
 

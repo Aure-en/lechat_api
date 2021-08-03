@@ -21,14 +21,15 @@ exports.check_user = function (req, res, next) {
   })(req, res, next);
 };
 
-// Check that the user is the administrator (only them can delete the server).
-// TO-DO: Works but should be rewritten.
+// Check permissions in a server
 exports.check_admin = function (req, res, next) {
   // If the user already has permission, no need to check.
   if (res.locals.isAllowed) return next();
 
-  switch (req.baseUrl.replace(req._parsedUrl.pathname, '')) {
-    case '/servers':
+  const base = req.baseUrl.split('/')[1];
+
+  switch (base) {
+    case 'servers':
       Server.findById(req.params.serverId).exec((err, server) => {
         if (err) return next(err);
         if (!server) return res.json({ error: 'Server not found.' });
@@ -39,7 +40,7 @@ exports.check_admin = function (req, res, next) {
       });
       break;
 
-    case '/categories':
+    case 'categories':
       Category.findById(req.params.categoryId)
         .populate('server')
         .exec((err, category) => {
@@ -52,13 +53,12 @@ exports.check_admin = function (req, res, next) {
         });
       break;
 
-    case '/channels':
+    case 'channels':
       Channel.findById(req.params.channelId)
         .populate('server')
         .exec((err, channel) => {
           if (err) return next(err);
           if (!channel) return res.json({ error: 'Channel not found.' });
-          console.log(req.user._id.toString(), channel.server.admin.toString());
           if (req.user._id.toString() === channel.server.admin.toString()) {
             res.locals.isAllowed = true;
           }
@@ -66,7 +66,7 @@ exports.check_admin = function (req, res, next) {
         });
       break;
 
-    case '/messages':
+    case 'messages':
       Message.findById(req.params.messageId)
         .populate('server')
         .exec((err, message) => {
@@ -79,14 +79,7 @@ exports.check_admin = function (req, res, next) {
         });
       break;
     default:
-      Server.findById(req.params.serverId).exec((err, server) => {
-        if (err) return next(err);
-        if (!server) return res.json({ error: 'Server not found.' });
-        if (req.user._id.toString() === server.admin.toString()) {
-          res.locals.isAllowed = true;
-        }
-        return next();
-      });
+      return next();
   }
 };
 
