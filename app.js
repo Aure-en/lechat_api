@@ -57,7 +57,7 @@ app.use((req, res, next) => {
 });
 
 // error handler
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -67,6 +67,7 @@ app.use((err, req, res, next) => {
   res.render('error');
 });
 
-httpServer.listen(3000, () => console.log('Listening on port 3000.'));
+const PORT = process.env.PORT || 3000;
+httpServer.listen(PORT, () => console.log(`Listening on port ${PORT}.`));
 
 module.exports = app;
