@@ -12,8 +12,6 @@ exports.authentication = (socket) => {
     // Save the user data
     socket.user = { _id: user._id, username: user.username };
 
-    console.log(socket.user);
-
     // Listen to user changes
     socket.join(user._id);
 
@@ -30,8 +28,6 @@ exports.authentication = (socket) => {
         });
       },
     );
-
-    console.log(socket.rooms);
   });
 };
 
