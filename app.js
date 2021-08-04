@@ -13,7 +13,7 @@ require('./mongo');
 const app = express();
 const httpServer = require('http').createServer(app);
 const changestreams = require('./realtime/changestreams/changestreams');
-const io = require('./realtime/socket').init(process.env.URL || httpServer);
+const io = require('./realtime/socket').init(httpServer);
 const indexRouter = require('./routes/index');
 const listeners = require('./realtime/listeners');
 
