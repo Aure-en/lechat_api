@@ -13,7 +13,7 @@ require('./mongo');
 const app = express();
 const httpServer = require('http').createServer(app);
 const changestreams = require('./realtime/changestreams/changestreams');
-const io = require('./realtime/socket').init(httpServer);
+const io = require('./realtime/socket').init(process.env.URL || httpServer);
 const indexRouter = require('./routes/index');
 const listeners = require('./realtime/listeners');
 
@@ -67,7 +67,6 @@ app.use((err, req, res, next) => {
   res.render('error');
 });
 
-const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => console.log(`Listening on port ${PORT}.`));
+httpServer.listen(3000, () => console.log('Listening on port 3000.'));
 
 module.exports = app;
