@@ -84,140 +84,11 @@ beforeAll(async (done) => {
 
 afterAll(async () => dbDisconnect());
 
-// -- Pin board creation --
-describe('Pin board creation in a server channel', () => {
-  test('Pin board cannot be created by users without the permission', async (done) => {
-    const res = await request(app)
-      .post(`/channels/${channel._id}/pins`)
-      .set({
-        Authorization: `Bearer ${stranger.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.status).toBe(403);
-    done();
-  });
-
-  test('Pin board can be created by users with the permission', async (done) => {
-    const res = await request(app)
-      .post(`/channels/${channel._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.body.success).toBeDefined();
-    done();
-  });
-});
-
-describe('Pin board creation in a conversation', () => {
-  test('Pin board cannot be created by users who are not in the conversations', async (done) => {
-    const res = await request(app)
-      .post(`/conversations/${conversation._id}/pins`)
-      .set({
-        Authorization: `Bearer ${stranger.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.status).toBe(403);
-    done();
-  });
-
-  test('Pin board can be created by conversations members', async (done) => {
-    const res = await request(app)
-      .post(`/conversations/${conversation._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.body.success).toBeDefined();
-    done();
-  });
-});
-
-// -- Pin board deletion --
-describe('Pin board deletion in a server channel', () => {
-  // Create a pin document for the channel
-  beforeAll(async (done) => {
-    await request(app)
-      .post(`/channels/${channel._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-    done();
-  });
-
-  test('Pin board cannot be deleted by users without the permission', async (done) => {
-    const res = await request(app)
-      .delete(`/channels/${channel._id}/pins`)
-      .set({
-        Authorization: `Bearer ${user.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.status).toBe(403);
-    done();
-  });
-
-  test('Pin board can be deleted by users with the permission', async (done) => {
-    const res = await request(app)
-      .delete(`/channels/${channel._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.body.success).toBeDefined();
-    done();
-  });
-});
-
-describe('Pin board deletion in a conversation', () => {
-  // Create a pin document for the conversation
-  beforeAll(async (done) => {
-    await request(app)
-      .post(`/conversations/${conversation._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-    done();
-  });
-
-  test('Pin board cannot be deleted by users who are not in the conversations', async (done) => {
-    const res = await request(app)
-      .delete(`/conversations/${conversation._id}/pins`)
-      .set({
-        Authorization: `Bearer ${stranger.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.status).toBe(403);
-    done();
-  });
-
-  test('Pin board can be deleted by conversations members', async (done) => {
-    const res = await request(app)
-      .delete(`/conversations/${conversation._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.body.success).toBeDefined();
-    done();
-  });
-});
-
-// -- Add pins to board --
-describe('Pins can be added to a server channel\'s pin board', () => {
+describe('Pin message to channel', () => {
   let message;
 
+  // Post a message in a server channel
   beforeAll(async (done) => {
-    // Create a pin document for the channel
-    await request(app)
-      .post(`/channels/${channel._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-
-    // Create a message that will be pinned
     const res = await request(app)
       .post(`/servers/${server._id}/channels/${channel._id}/messages`)
       .set({
@@ -227,13 +98,19 @@ describe('Pins can be added to a server channel\'s pin board', () => {
       .send({ text: 'Hello' })
       .redirects(1);
     message = res.body;
-
     done();
   });
 
-  test('A random user cannot add a pin to the pin document', async (done) => {
+  test('Messages cannot be pinned by anonymous users', async (done) => {
     const res = await request(app)
-      .post(`/channels/${channel._id}/pins/${message._id}`)
+      .put(`/messages/${message._id}/pin`);
+    expect(res.status).toBe(401);
+    done();
+  });
+
+  test('Messages cannot be pinned by random users', async (done) => {
+    const res = await request(app)
+      .put(`/messages/${message._id}/pin`)
       .set({
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
@@ -242,31 +119,24 @@ describe('Pins can be added to a server channel\'s pin board', () => {
     done();
   });
 
-  test('A user with special permissions can add a pin to the pin document', async (done) => {
+  test('Messages can be pinned by the server admin', async (done) => {
     const res = await request(app)
-      .post(`/channels/${channel._id}/pins/${message._id}`)
+      .put(`/messages/${message._id}/pin`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
-      });
-    expect(res.body.success).toBeDefined();
+      })
+      .redirects(1);
+    expect(res.body.pinned).toBe(true);
     done();
   });
 });
 
-describe('Pins can be added to a conversation\'s pin board', () => {
+describe('Pin message to a conversation', () => {
   let message;
 
+  // Post a message in a conversation
   beforeAll(async (done) => {
-    // Create a pin document for the conversation
-    await request(app)
-      .post(`/conversations/${conversation._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-
-    // Create a message that will be pinned
     const res = await request(app)
       .post(`/conversations/${conversation._id}/messages`)
       .set({
@@ -279,9 +149,16 @@ describe('Pins can be added to a conversation\'s pin board', () => {
     done();
   });
 
-  test('A random user cannot add a pin to the pin document', async (done) => {
+  test('Messages cannot be pinned by anonymous users', async (done) => {
     const res = await request(app)
-      .post(`/conversations/${conversation._id}/pins/${message._id}`)
+      .put(`/messages/${message._id}/pin`);
+    expect(res.status).toBe(401);
+    done();
+  });
+
+  test('Messages cannot be pinned by random users', async (done) => {
+    const res = await request(app)
+      .put(`/messages/${message._id}/pin`)
       .set({
         Authorization: `Bearer ${stranger.token}`,
         'Content-Type': 'application/json',
@@ -290,32 +167,24 @@ describe('Pins can be added to a conversation\'s pin board', () => {
     done();
   });
 
-  test('A conversation member can add a pin to the pin document', async (done) => {
+  test('Messages can be pinned by conversations members', async (done) => {
     const res = await request(app)
-      .post(`/conversations/${conversation._id}/pins/${message._id}`)
+      .put(`/messages/${message._id}/pin`)
       .set({
-        Authorization: `Bearer ${admin.token}`,
+        Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
-      });
-    expect(res.body.success).toBeDefined();
+      })
+      .redirects(1);
+    expect(res.body.pinned).toBe(true);
     done();
   });
 });
 
-// -- Remove pins to board --
-describe('Pins can be removed from a server channel\'s pin board', () => {
+describe('Pins can be accessed in a channel', () => {
+  // Post and pin a message
   let message;
 
   beforeAll(async (done) => {
-    // Create a pin document for the channel
-    await request(app)
-      .post(`/channels/${channel._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-
-    // Create a message that will be pinned
     const res = await request(app)
       .post(`/servers/${server._id}/channels/${channel._id}/messages`)
       .set({
@@ -326,9 +195,8 @@ describe('Pins can be removed from a server channel\'s pin board', () => {
       .redirects(1);
     message = res.body;
 
-    // Pin the message
     await request(app)
-      .post(`/channels/${channel._id}/pins/${message._id}`)
+      .put(`/messages/${message._id}/pin`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
@@ -336,42 +204,23 @@ describe('Pins can be removed from a server channel\'s pin board', () => {
     done();
   });
 
-  test('A random user cannot remove a pin from the pin document', async (done) => {
+  test('Users can read the pinned messages', async (done) => {
     const res = await request(app)
-      .delete(`/channels/${channel._id}/pins/${message._id}`)
-      .set({
-        Authorization: `Bearer ${user.token}`,
-        'Content-Type': 'application/json',
-      });
-    expect(res.status).toBe(403);
-    done();
-  });
-
-  test('A user with special permissions can remove a pin from the pin document', async (done) => {
-    const res = await request(app)
-      .delete(`/channels/${channel._id}/pins/${message._id}`)
+      .get(`/channels/${channel._id}/messages?pinned=true`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
       });
-    expect(res.body.success).toBeDefined();
+    expect(res.body.findIndex((pinned) => pinned._id === message._id)).not.toBe(-1);
     done();
   });
 });
 
-describe('Pins can be removed from a conversation\'s pin board', () => {
+describe('Pins can be accessed in a conversation', () => {
   let message;
 
+  // Post and pin a message
   beforeAll(async (done) => {
-    // Create a pin document for the conversation
-    await request(app)
-      .post(`/conversations/${conversation._id}/pins`)
-      .set({
-        Authorization: `Bearer ${admin.token}`,
-        'Content-Type': 'application/json',
-      });
-
-    // Create a message that will be pinned
     const res = await request(app)
       .post(`/conversations/${conversation._id}/messages`)
       .set({
@@ -382,9 +231,8 @@ describe('Pins can be removed from a conversation\'s pin board', () => {
       .redirects(1);
     message = res.body;
 
-    // Add the message to the conversation pins
     await request(app)
-      .post(`/conversations/${conversation._id}/pins/${message._id}`)
+      .put(`/messages/${message._id}/pin`)
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
@@ -392,9 +240,107 @@ describe('Pins can be removed from a conversation\'s pin board', () => {
     done();
   });
 
-  test('A random user cannot remove a pin from the conversation\'s pins', async (done) => {
+  test('Users can read the pinned messages', async (done) => {
     const res = await request(app)
-      .delete(`/conversations/${conversation._id}/pins/${message._id}`)
+      .get(`/conversations/${conversation._id}/messages?pinned=true`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      });
+    expect(res.body.findIndex((pinned) => pinned._id === message._id)).not.toBe(-1);
+    done();
+  });
+});
+
+describe('Messages can be unpinned in a channel', () => {
+  // Post and pin a message
+  let message;
+
+  beforeAll(async (done) => {
+    const res = await request(app)
+      .post(`/servers/${server._id}/channels/${channel._id}/messages`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ text: 'Hello' })
+      .redirects(1);
+    message = res.body;
+
+    await request(app)
+      .put(`/messages/${message._id}/pin`)
+      .set({
+        Authorization: `Bearer ${admin.token}`,
+        'Content-Type': 'application/json',
+      });
+    done();
+  });
+
+  test('Messages cannot be unpinned by anonymous users', async (done) => {
+    const res = await request(app)
+      .put(`/messages/${message._id}/unpin`);
+    expect(res.status).toBe(401);
+    done();
+  });
+
+  test('Messages cannot be unpinned by random users', async (done) => {
+    const res = await request(app)
+      .put(`/messages/${message._id}/unpin`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      });
+    expect(res.status).toBe(403);
+    done();
+  });
+
+  test('Messages can be unpinned by the server admin', async (done) => {
+    const res = await request(app)
+      .put(`/messages/${message._id}/unpin`)
+      .set({
+        Authorization: `Bearer ${admin.token}`,
+        'Content-Type': 'application/json',
+      })
+      .redirects(1);
+    expect(res.body.pinned).toBe(false);
+    done();
+  });
+});
+
+describe('Messages can be unpinned in a conversation', () => {
+  let message;
+
+  // Post and pin a message
+  beforeAll(async (done) => {
+    const res = await request(app)
+      .post(`/conversations/${conversation._id}/messages`)
+      .set({
+        Authorization: `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      })
+      .send({ text: 'Hello' })
+      .redirects(1);
+    message = res.body;
+
+    await request(app)
+      .put(`/messages/${message._id}/pin`)
+      .set({
+        Authorization: `Bearer ${admin.token}`,
+        'Content-Type': 'application/json',
+      });
+    done();
+  });
+
+  test('Messages cannot be unpinned by anonymous users', async (done) => {
+    const res = await request(app)
+      .put(`/messages/${message._id}/unpin`);
+    expect(res.status).toBe(401);
+    done();
+  });
+
+  test('Messages cannot be unpinned by random users', async (done) => {
+    const res = await request(app)
+      .put(`/messages/${message._id}/unpin`)
       .set({
         Authorization: `Bearer ${stranger.token}`,
         'Content-Type': 'application/json',
@@ -403,14 +349,15 @@ describe('Pins can be removed from a conversation\'s pin board', () => {
     done();
   });
 
-  test('A conversation member can remove the pin from the conversation\'s pins', async (done) => {
+  test('Messages can be unpinned by conversations members', async (done) => {
     const res = await request(app)
-      .delete(`/conversations/${conversation._id}/pins/${message._id}`)
+      .put(`/messages/${message._id}/unpin`)
       .set({
-        Authorization: `Bearer ${admin.token}`,
+        Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
-      });
-    expect(res.body.success).toBeDefined();
+      })
+      .redirects(1);
+    expect(res.body.pinned).toBe(false);
     done();
   });
 });

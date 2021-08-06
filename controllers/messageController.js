@@ -162,3 +162,17 @@ exports.message_delete_reaction = [
     }
   },
 ];
+
+exports.message_pin = (req, res, next) => {
+  Message.findByIdAndUpdate(req.params.messageId, { pinned: true }).exec((err, message) => {
+    if (err) return next(err);
+    return res.redirect(303, message.url);
+  });
+};
+
+exports.message_unpin = (req, res, next) => {
+  Message.findByIdAndUpdate(req.params.messageId, { pinned: false }).exec((err, message) => {
+    if (err) return next(err);
+    return res.redirect(303, message.url);
+  });
+};

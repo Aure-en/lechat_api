@@ -2,13 +2,12 @@ const passport = require('passport');
 const Category = require('../models/category');
 const Channel = require('../models/channel');
 const Conversation = require('../models/conversation');
-const Friend = require('../models/friend');
 const Message = require('../models/message');
 const Server = require('../models/server');
 const User = require('../models/user');
 
 // Check that the user is logged in
-exports.check_user = function (req, res, next) {
+exports.check_user = (req, res, next) => {
   passport.authenticate('jwt', { session: false }, (err, userId) => {
     if (err) return next(err);
     if (!userId) {
@@ -24,7 +23,7 @@ exports.check_user = function (req, res, next) {
 };
 
 // Check permissions in a server
-exports.check_admin = function (req, res, next) {
+exports.check_admin = (req, res, next) => {
   // If the user already has permission, no need to check.
   if (res.locals.isAllowed) return next();
 
@@ -86,7 +85,7 @@ exports.check_admin = function (req, res, next) {
 };
 
 // Check if the user is the message author
-exports.check_author = function (req, res, next) {
+exports.check_author = (req, res, next) => {
   // If the user already has permission, no need to check.
   if (res.locals.isAllowed) return next();
   Message.findById(req.params.messageId).exec((err, message) => {
@@ -102,24 +101,12 @@ exports.check_author = function (req, res, next) {
 };
 
 // Check the user identity
-exports.check_user_id = function (req, res, next) {
+exports.check_user_id = (req, res, next) => {
   if (req.user._id.toString() === req.params.userId) {
     next();
   } else {
     res.status(403).json({ error: 'You do not have permission to perform this operation.' });
   }
-};
-
-// Check if res.locals.isAllowed = true
-exports.check_permission = function (req, res, next) {
-  if (!res.locals.isAllowed) {
-    return res
-      .status(403)
-      .json({
-        error: 'You do not have the permission to perform this operation.',
-      });
-  }
-  return next();
 };
 
 // Check if the user is a member of a conversation
@@ -136,4 +123,49 @@ exports.check_conversation = (req, res, next) => {
       next();
     },
   );
+};
+
+// Check if the user can pin a message
+exports.check_pin = (req, res, next) => {
+  Message.findById(req.params.messageId).exec((err, message) => {
+    if (err) return next(err);
+    if (!message) return res.status(404).json({ error: 'Message not found.' });
+
+    // If the message was posted in a private conversation,
+    // Check that the current user is a member of the conversation
+    if (message.conversation) {
+      Conversation.findById(message.conversation).exec((err, conversation) => {
+        if (err) return next(err);
+        if (!conversation.members.includes(req.user._id.toString())) {
+          return res.status(403).json({ error: 'You do not have permission to execute this operation.' });
+        }
+        return next();
+      });
+    }
+
+    // If the message was posted in a server
+    // Check that the current user is the admin of the server
+    if (message.server) {
+      Server.findById(message.server).exec((err, server) => {
+        if (err) return next(err);
+        if (!server) return res.json({ error: 'Server not found.' });
+        if (req.user._id.toString() !== server.admin.toString()) {
+          return res.status(403).json({ error: 'You do not have permission to execute this operation.' });
+        }
+        return next();
+      });
+    }
+  });
+};
+
+// Check if res.locals.isAllowed = true
+exports.check_permission = (req, res, next) => {
+  if (!res.locals.isAllowed) {
+    return res
+      .status(403)
+      .json({
+        error: 'You do not have the permission to perform this operation.',
+      });
+  }
+  return next();
 };

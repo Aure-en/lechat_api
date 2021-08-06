@@ -1,7 +1,7 @@
 exports.setQueries = (options) => {
   const queries = {};
   const {
-    search, channel, author, before, after, file,
+    search, channel, author, before, after, file, pinned
   } = options;
 
   if (search) {
@@ -27,6 +27,11 @@ exports.setQueries = (options) => {
   if (file) {
     queries.file = { $exists: true };
   }
+
+  if (pinned) {
+    queries.pinned = true;
+  }
+
   return queries;
 };
 

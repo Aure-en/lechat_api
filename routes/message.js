@@ -16,6 +16,22 @@ router.put(
   messageController.message_update,
 );
 
+// PUT to pin a message
+router.put(
+  '/:messageId/pin',
+  checkAuth.check_user,
+  checkAuth.check_pin,
+  messageController.message_pin,
+);
+
+// PUT to unpin a message
+router.put(
+  '/:messageId/unpin',
+  checkAuth.check_user,
+  checkAuth.check_pin,
+  messageController.message_unpin,
+);
+
 // DELETE a message
 router.delete(
   '/:messageId',

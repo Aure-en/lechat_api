@@ -5,7 +5,10 @@ const friendController = require('../controllers/friendController');
 const router = express.Router({ mergeParams: true });
 
 // Check that the user is logged-in before handling friends
-router.use('/*', checkAuth.check_user);
+router.use(
+  '/*',
+  checkAuth.check_user,
+);
 
 // Accept a friend request
 router.put('/:friendId', friendController.friend_accept);
