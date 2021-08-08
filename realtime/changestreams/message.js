@@ -12,11 +12,23 @@ exports.init = (io) => {
         if (!change.fullDocument) return;
         const document = { ...change.fullDocument };
         // Get the author username
-        User.findById(document.author, 'username').exec((err, user) => {
+        User.findById(document.author, 'username avatar').exec((err, user) => {
           document.author = {
-            _id: change.fullDocument.author,
+            _id: change.fullDocument.author.toString(),
             username: user.username,
+            avatar: Object.keys(user.avatar).length > 0 && user.avatar,
           };
+
+          document._id = document._id.toString();
+
+          if (document.server && document.channel) {
+            document.server = document.server.toString();
+            document.channel = document.channel.toString();
+          }
+
+          if (document.conversation) {
+            document.conversation = document.conversation.toString();
+          }
 
           // Emit the message to the room
           const room = document.server || document.conversation;

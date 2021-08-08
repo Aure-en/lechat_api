@@ -3,7 +3,7 @@ const Message = require('../models/message');
 // Details of a specific message (GET)
 exports.message_detail = (req, res, next) => {
   Message.findById(req.params.messageId)
-    .populate('author', 'username')
+    .populate('author', 'username avatar')
     .populate({
       path: 'reaction',
       populate: {
