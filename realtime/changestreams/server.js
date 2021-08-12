@@ -1,9 +1,7 @@
 const Server = require('../../models/server');
 
-let changeStream;
-
 exports.init = (io) => {
-  changeStream = Server.watch([], { fullDocument: 'updateLookup' });
+  const changeStream = Server.watch([], { fullDocument: 'updateLookup' });
   changeStream.on('change', (change) => {
     if (change.operationType === 'delete' || change.operationType === 'insert') return;
 

@@ -4,6 +4,7 @@ const server = require('./server');
 const user = require('./user');
 const friend = require('./friend');
 const activity = require('./activity');
+const conversation = require('./conversation');
 
 exports.init = (io) => {
   message.init(io);
@@ -12,4 +13,5 @@ exports.init = (io) => {
   user.init(io);
   friend.init(io);
   activity.init(io);
+  conversation.init(io);
 };

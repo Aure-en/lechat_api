@@ -1,10 +1,8 @@
 const Message = require('../../models/message');
 const User = require('../../models/user');
 
-let changeStream;
-
 exports.init = (io) => {
-  changeStream = Message.watch([], { fullDocument: 'updateLookup' });
+  const changeStream = Message.watch([], { fullDocument: 'updateLookup' });
   changeStream.on('change', (change) => {
     switch (change.operationType) {
       case 'insert':

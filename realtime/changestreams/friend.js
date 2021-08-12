@@ -2,10 +2,8 @@ const async = require('async');
 const Friend = require('../../models/friend');
 const User = require('../../models/user');
 
-let changeStream;
-
 exports.init = (io) => {
-  changeStream = Friend.watch([], { fullDocument: 'updateLookup' });
+  const changeStream = Friend.watch([], { fullDocument: 'updateLookup' });
   changeStream.on('change', (change) => {
     switch (change.operationType) {
       case 'insert':

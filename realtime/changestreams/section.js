@@ -1,9 +1,6 @@
 const Category = require('../../models/category');
 const Channel = require('../../models/channel');
 
-let categoryStream;
-let channelStream;
-
 const realtime = (io, change, section) => {
 // section is either 'category' or 'channel'
   console.log('SECTION CHANGE', change);
@@ -38,11 +35,11 @@ const realtime = (io, change, section) => {
 };
 
 exports.init = (io) => {
-  categoryStream = Category.watch([], { fullDocument: 'updateLookup' });
+  const categoryStream = Category.watch([], { fullDocument: 'updateLookup' });
   categoryStream.on('change', (change) => {
     realtime(io, change, 'category');
   });
-  channelStream = Channel.watch([], { fullDocument: 'updateLookup' });
+  const channelStream = Channel.watch([], { fullDocument: 'updateLookup' });
   channelStream.on('change', (change) => {
     realtime(io, change, 'channel');
   });
