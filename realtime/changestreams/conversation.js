@@ -11,19 +11,21 @@ exports.init = (io) => {
         const document = { ...change.fullDocument };
         const { members } = document;
 
-        Conversation.findById(change.fullDocument._id, 'members').populate('members', 'username avatar').exec((err, conversation) => {
-          members.forEach((member) => {
-            io
-              .in(member._id.toString())
-              .emit('insert conversation', {
+        Conversation.findById(change.fullDocument._id, 'members')
+          .populate('members', 'username avatar')
+          .exec((err, conversation) => {
+            members.forEach((member) => {
+              io.in(member._id.toString()).emit('insert conversation', {
                 operation: change.operationType,
                 document: {
                   _id: document._id,
                   members: conversation.members,
                 },
               });
+
+              io.in(member._id.toString()).emit('join', document._id);
+            });
           });
-        });
         break;
 
       default:

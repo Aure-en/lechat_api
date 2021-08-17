@@ -52,15 +52,11 @@ exports.deauthentication = (socket, io) => {
  */
 exports.join = (socket) => {
   /**
-   * @params {object} data:
-   *  - location {string} (server or conversation id)
-   *  - users {array} (users who must join the location room)
+   * @params string room (server or conversation id)
    * The socket will join the corresponding room to listen to changes.
    */
-  socket.on('join', (data) => {
-    if (data.users.includes(socket.user._id)) {
-      socket.join(data.location);
-    }
+  socket.on('join', (room) => {
+    socket.join(room);
   });
 };
 

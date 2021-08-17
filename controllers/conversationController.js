@@ -1,12 +1,15 @@
 const { body, validationResult } = require('express-validator');
+const { isValidObjectId } = require('mongoose');
 const Conversation = require('../models/conversation');
 const Message = require('../models/message');
+const User = require('../models/user');
 const queries = require('../utils/queries');
 
 // List a conversation informations
 exports.conversation_detail = (req, res, next) => {
+  if (!isValidObjectId(req.params.conversationId)) return res.json({ error: 'Invalid id.' });
   Conversation.findById(req.params.conversationId)
-    .populate('members', 'username _id avatar')
+    .populate('members', 'username avatar')
     .exec((err, conversation) => {
       if (err) return next(err);
       if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
@@ -18,16 +21,16 @@ exports.conversation_detail = (req, res, next) => {
 exports.conversation_existence = (req, res, next) => {
   const members = req.query.members.split(',');
   Conversation.findOne({ members: { $all: members } })
-    .populate('members', 'username _id avatar')
+    .populate('members', 'username avatar')
     .exec((err, conversation) => {
-      if (err) return next(err);
+      if (err) return res.json({ errors: 'Members not found.' });
       return res.json(conversation);
     });
 };
 
 // List all the conversations of a specific user (GET)
 exports.conversation_list = (req, res, next) => {
-  Conversation.find({ members: req.user._id }, '_id').populate('members', 'username _id avatar').exec(
+  Conversation.find({ members: req.user._id }, '_id').populate('members', 'username avatar').exec(
     (err, conversations) => {
       if (err) return next(err);
       return res.json(conversations);
@@ -37,6 +40,7 @@ exports.conversation_list = (req, res, next) => {
 
 // List messages from a conversation (GET)
 exports.conversation_messages = (req, res, next) => {
+  if (!isValidObjectId(req.params.conversationId)) return res.json({ error: 'Invalid id.' });
   const limit = req.query.limit || 100;
   Message.find({
     conversation: req.params.conversationId,
@@ -45,7 +49,7 @@ exports.conversation_messages = (req, res, next) => {
   })
     .sort({ timestamp: -1 })
     .limit(limit * 1) // Convert to number
-    .populate('author', 'username _id avatar')
+    .populate('author', 'username avatar')
     .populate({
       path: 'reaction',
       populate: {
@@ -80,6 +84,18 @@ exports.conversation_create = [
     next();
   },
 
+  // Check that all the members exist
+  (req, res, next) => {
+    const members = Array.from(new Set(JSON.parse(req.body.members)));
+    User.find({ _id: { $in: members } }).exec((err, users) => {
+      if (err) return next(err);
+      if (users.length !== members.length) {
+        return res.json({ errors: 'All users do not exist.' });
+      }
+      return next();
+    });
+  },
+
   // Check if the conversation already exists
   (req, res, next) => {
     Conversation.findOne({
@@ -87,7 +103,7 @@ exports.conversation_create = [
     }).exec((err, conversation) => {
       if (err) return next(err);
       if (conversation) return res.json(conversation);
-      next();
+      return next();
     });
   },
 

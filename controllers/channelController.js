@@ -1,4 +1,5 @@
 const { body, validationResult } = require('express-validator');
+const { isValidObjectId } = require('mongoose');
 const Channel = require('../models/channel');
 const Message = require('../models/message');
 const queries = require('../utils/queries');
@@ -21,6 +22,7 @@ exports.channel_list = (req, res, next) => {
 
 // Detail of a specific channel (GET)
 exports.channel_detail = (req, res, next) => {
+  if (!isValidObjectId(req.params.channelId)) return res.json({ error: 'Invalid id.' });
   Channel.findById(req.params.channelId).exec((err, channel) => {
     if (err) return next(err);
     if (!channel) {
@@ -32,6 +34,7 @@ exports.channel_detail = (req, res, next) => {
 
 // List all messages in a channel (GET)
 exports.channel_messages = (req, res, next) => {
+  if (!isValidObjectId(req.params.channelId)) return res.json({ error: 'Invalid id.' });
   const limit = req.query.limit || 100;
   Message.find({
     channel: req.params.channelId,

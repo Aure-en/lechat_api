@@ -1,5 +1,6 @@
 const async = require('async');
 const { body, validationResult } = require('express-validator');
+const { isValidObjectId } = require('mongoose');
 const Activity = require('../models/activity');
 
 // Create a document to start tracking the user's activity.
@@ -35,6 +36,7 @@ exports.activity_update_server = [
 
   // Update the servers array.
   (req, res, next) => {
+    if (!isValidObjectId(req.body.server)) return res.json({ error: 'Invalid id.' });
     Activity.findOneAndUpdate(
       { _id: req.params.userId, 'servers._id': { $ne: req.body.server } },
       {
@@ -69,6 +71,7 @@ exports.activity_update_channel = [
   },
 
   (req, res, next) => {
+    if (!isValidObjectId(req.body.server) || !isValidObjectId(req.body.channel)) return res.json({ error: 'Invalid id.' });
     async.parallel(
       [
         // Update the channel activity if it already exists in the channels array.
@@ -134,6 +137,7 @@ exports.activity_update_conversation = [
 
   // Update the conversations array.
   (req, res, next) => {
+    if (!isValidObjectId(req.body.conversation)) return res.json({ error: 'Invalid id.' });
     async.parallel(
       [
         // Update the conversation activity if it already exists in the array.

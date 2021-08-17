@@ -2,6 +2,7 @@ const async = require('async');
 const { body, validationResult } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
+const { isValidObjectId } = require('mongoose');
 const Server = require('../models/server');
 const User = require('../models/user');
 const Message = require('../models/message');
@@ -23,15 +24,17 @@ exports.server_list = (req, res, next) => {
 
 // Detail of a specific server (GET)
 exports.server_detail = (req, res, next) => {
+  if (!isValidObjectId(req.params.serverId)) return res.json({ error: 'Invalid server id.' });
   Server.findOne({ _id: req.params.serverId }).exec((err, server) => {
-    if (err) return next(err);
     if (!server) return res.json({ error: 'Server not found' });
+    if (err) return next(err);
     return res.json(server);
   });
 };
 
 // List all messages in a server (GET)
 exports.server_messages = (req, res, next) => {
+  if (!isValidObjectId(req.params.serverId)) return res.json({ error: 'Invalid server id.' });
   const limit = req.query.limit || 100;
   Message.find({
     server: req.params.serverId,
@@ -56,7 +59,8 @@ exports.server_messages = (req, res, next) => {
 
 // List all members in a server (GET)
 exports.server_members = (req, res, next) => {
-  User.find({ server: req.params.serverId }, '-password -email').exec((err, users) => {
+  if (!isValidObjectId(req.params.serverId)) return res.json({ error: 'Invalid server id.' });
+  User.find({ server: req.params.serverId }, 'username avatar').exec((err, users) => {
     if (err) return next(err);
     return res.json(users);
   });
@@ -92,7 +96,7 @@ exports.server_create = [
       data.icon = {
         name: req.file.filename,
         data: fs.readFileSync(
-          path.join(__dirname, `../temp/${req.file.filename}`)
+          path.join(__dirname, `../temp/${req.file.filename}`),
         ),
         contentType: req.file.mimetype,
       };
@@ -116,14 +120,14 @@ exports.server_create = [
           User.findByIdAndUpdate(
             req.user._id.toString(),
             { $push: { server: server._id } },
-            {}
+            {},
           ).exec(callback);
         },
       ],
       (err) => {
         if (err) return next(err);
         return res.redirect(303, server.url);
-      }
+      },
     );
   },
 ];
@@ -155,7 +159,7 @@ exports.server_update = [
       const icon = {
         name: req.file.filename,
         data: fs.readFileSync(
-          path.join(__dirname, `../temp/${req.file.filename}`)
+          path.join(__dirname, `../temp/${req.file.filename}`),
         ),
         contentType: req.file.mimetype,
       };
@@ -184,7 +188,7 @@ exports.server_remove_icon = (req, res, next) => {
     (err, server) => {
       if (err) return next(err);
       return res.redirect(303, server.url);
-    }
+    },
   );
 };
 
@@ -211,7 +215,7 @@ exports.server_delete = (req, res, next) => {
       (callback) => {
         User.updateMany(
           { server: req.params.serverId },
-          { $pull: { server: req.params.serverId } }
+          { $pull: { server: req.params.serverId } },
         ).exec(callback);
       },
 
@@ -223,6 +227,6 @@ exports.server_delete = (req, res, next) => {
     (err) => {
       if (err) return next(err);
       return res.redirect(303, '/servers');
-    }
+    },
   );
 };
