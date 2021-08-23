@@ -7,6 +7,8 @@ const router = express.Router({ mergeParams: true });
 // GET a specific message
 router.get('/:messageId', messageController.message_detail);
 
+router.get('/:messageId/files/:fileNumber', messageController.message_file);
+
 // PUT to update a message
 router.put(
   '/:messageId',

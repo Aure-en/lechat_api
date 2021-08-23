@@ -22,6 +22,7 @@ router.post(
 // POST to create a new message
 router.post(
   '/:serverId/channels/:channelId/messages',
+  upload.files,
   checkAuth.check_user,
   messageController.message_create,
 );

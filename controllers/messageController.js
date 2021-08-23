@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const Message = require('../models/message');
 
 // Details of a specific message (GET)
@@ -27,6 +29,25 @@ exports.message_create = (req, res, next) => {
     text: req.body.text,
     timestamp: Date.now(),
   };
+
+  if (req.files) {
+    const files = [];
+    req.files.map((file) => {
+      // Push the image in images
+      files.push({
+        name: file.filename,
+        data: fs.readFileSync(path.join(__dirname, `../temp/${file.filename}`)),
+        contentType: file.mimetype,
+        size: file.size,
+      });
+
+      // Delete the image from the disk after using it
+      fs.unlink(path.join(__dirname, `../temp/${file.filename}`), (err) => {
+        if (err) throw err;
+      });
+    });
+    data.files = files;
+  }
 
   if (req.params.serverId && req.params.channelId) {
     data.server = req.params.serverId;
@@ -174,5 +195,30 @@ exports.message_unpin = (req, res, next) => {
   Message.findByIdAndUpdate(req.params.messageId, { pinned: false }).exec((err, message) => {
     if (err) return next(err);
     return res.redirect(303, message.url);
+  });
+};
+
+exports.message_file = (req, res, next) => {
+  Message.findOne({ _id: req.params.messageId }).exec((err, message) => {
+    if (err) return next(err);
+    if (!message) return res.status(404).json({ error: 'Message not found.' });
+    if (!message?.files[req.params.fileNumber]) return res.status(404).json({ error: 'File not found.' });
+
+    const file = message.files[req.params.fileNumber];
+    const filePath = path.join(__dirname, `../temp/${req.params.messageId}${req.params.fileNumber}.${file.contentType.split('/')[1]}`)
+    fs.writeFile(
+      filePath,
+      file.data,
+      (error) => {
+        if (error) next(error);
+
+        // Send the file
+        res.download(
+          filePath,
+          `${file.name}`,
+          () => fs.unlinkSync(filePath),
+        );
+      },
+    );
   });
 };
