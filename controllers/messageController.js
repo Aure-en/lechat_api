@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { isValidObjectId } = require('mongoose');
 const Message = require('../models/message');
 
 // Details of a specific message (GET)
@@ -66,9 +67,32 @@ exports.message_create = (req, res, next) => {
 
 // Update a message (PUT)
 exports.message_update = (req, res, next) => {
+  const data = {
+    text: req.body.text,
+  };
+
+  if (req.files) {
+    const files = [];
+    req.files.map((file) => {
+      // Push the image in images
+      files.push({
+        name: file.filename,
+        data: fs.readFileSync(path.join(__dirname, `../temp/${file.filename}`)),
+        contentType: file.mimetype,
+        size: file.size,
+      });
+
+      // Delete the image from the disk after using it
+      fs.unlink(path.join(__dirname, `../temp/${file.filename}`), (err) => {
+        if (err) throw err;
+      });
+    });
+    data.files = files;
+  }
+
   Message.findByIdAndUpdate(
     req.params.messageId,
-    { text: req.body.text, edited: true },
+    { ...data, edited: true },
     {},
     (err, message) => {
       if (err) return next(err);
@@ -184,6 +208,7 @@ exports.message_delete_reaction = [
   },
 ];
 
+// Pin a message
 exports.message_pin = (req, res, next) => {
   Message.findByIdAndUpdate(req.params.messageId, { pinned: true }).exec((err, message) => {
     if (err) return next(err);
@@ -191,6 +216,7 @@ exports.message_pin = (req, res, next) => {
   });
 };
 
+// Unpin a message
 exports.message_unpin = (req, res, next) => {
   Message.findByIdAndUpdate(req.params.messageId, { pinned: false }).exec((err, message) => {
     if (err) return next(err);
@@ -198,14 +224,18 @@ exports.message_unpin = (req, res, next) => {
   });
 };
 
+// Create a download link for message files
 exports.message_file = (req, res, next) => {
+  if (!isValidObjectId(req.params.messageId)) return res.json({ error: 'Message not found.' });
   Message.findOne({ _id: req.params.messageId }).exec((err, message) => {
     if (err) return next(err);
     if (!message) return res.status(404).json({ error: 'Message not found.' });
     if (!message?.files[req.params.fileNumber]) return res.status(404).json({ error: 'File not found.' });
 
     const file = message.files[req.params.fileNumber];
-    const filePath = path.join(__dirname, `../temp/${req.params.messageId}${req.params.fileNumber}.${file.contentType.split('/')[1]}`)
+    const filePath = path.join(__dirname, `../temp/${req.params.messageId}${req.params.fileNumber}.${file.contentType.split('/')[1]}`);
+
+    // Create file from binary data received from MongoDB
     fs.writeFile(
       filePath,
       file.data,
@@ -216,6 +246,7 @@ exports.message_file = (req, res, next) => {
         res.download(
           filePath,
           `${file.name}`,
+          // Erase the file
           () => fs.unlinkSync(filePath),
         );
       },

@@ -1,6 +1,7 @@
 const express = require('express');
 const checkAuth = require('../auth/checkAuth');
 const messageController = require('../controllers/messageController');
+const upload = require('../middleware/upload');
 
 const router = express.Router({ mergeParams: true });
 
@@ -12,6 +13,7 @@ router.get('/:messageId/files/:fileNumber', messageController.message_file);
 // PUT to update a message
 router.put(
   '/:messageId',
+  upload.files,
   checkAuth.check_user,
   checkAuth.check_author,
   checkAuth.check_permission,
