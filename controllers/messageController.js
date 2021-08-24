@@ -67,32 +67,9 @@ exports.message_create = (req, res, next) => {
 
 // Update a message (PUT)
 exports.message_update = (req, res, next) => {
-  const data = {
-    text: req.body.text,
-  };
-
-  if (req.files) {
-    const files = [];
-    req.files.map((file) => {
-      // Push the image in images
-      files.push({
-        name: file.filename,
-        data: fs.readFileSync(path.join(__dirname, `../temp/${file.filename}`)),
-        contentType: file.mimetype,
-        size: file.size,
-      });
-
-      // Delete the image from the disk after using it
-      fs.unlink(path.join(__dirname, `../temp/${file.filename}`), (err) => {
-        if (err) throw err;
-      });
-    });
-    data.files = files;
-  }
-
   Message.findByIdAndUpdate(
     req.params.messageId,
-    { ...data, edited: true },
+    { text: req.body.text, edited: true },
     {},
     (err, message) => {
       if (err) return next(err);

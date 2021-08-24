@@ -10,8 +10,8 @@ exports.init = (io) => {
     if (
       settings.some((field) => Object.keys(change.updateDescription.updatedFields).includes(field))
     ) {
-      // I have no idea why the server icon won't display properly
-      // on the front-end when I simply send the change.fullDocument.
+      // Server icon won't display properly on the front-end
+      // when I simply send the change.fullDocument?
       Server.findById(change.fullDocument._id).exec((err, res) => {
         io.in(change.fullDocument._id.toString()).emit(
           `${change.operationType} server`,
