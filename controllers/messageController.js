@@ -1,3 +1,7 @@
+const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
+const { isValidObjectId } = require('mongoose');
 const Message = require('../models/message');
 
 // Details of a specific message (GET)
@@ -21,12 +25,56 @@ exports.message_detail = (req, res, next) => {
 };
 
 // Create a message (POST)
-exports.message_create = (req, res, next) => {
+exports.message_create = async (req, res, next) => {
   const data = {
     author: req.user._id.toString(),
     text: req.body.text,
     timestamp: Date.now(),
   };
+
+  if (req.files?.length > 0) {
+    const files = [];
+    await Promise.all(req.files.map(async (file) => {
+      const toFiles = {
+        name: file.filename,
+        data: fs.readFileSync(path.join(__dirname, `../temp/${file.filename}`)),
+        contentType: file.mimetype,
+        size: file.size,
+      };
+
+      /**
+       * Create data if:
+       * - The file is an image
+       * - The image is big (> 5kB)
+       */
+      if (file.mimetype.split('/')[0] === 'image' && file.size > 5000) {
+        await sharp(path.join(__dirname, `../temp/${file.filename}`))
+          .resize(
+            64,
+            64,
+            {
+              fit: sharp.fit.cover,
+            },
+          )
+          .toFile(path.join(__dirname, `../temp/sm-${file.filename}`));
+        toFiles.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${file.filename}`));
+
+        // Delete the thumbnail from the disk after using it
+        fs.unlink(path.join(__dirname, `../temp/sm-${file.filename}`), (err) => {
+          if (err) throw err;
+        });
+      }
+
+      files.push(toFiles);
+
+      // Delete the images from the disk after using it
+      fs.unlink(path.join(__dirname, `../temp/${file.filename}`), (err) => {
+        if (err) throw err;
+      });
+    }));
+
+    data.files = files;
+  }
 
   if (req.params.serverId && req.params.channelId) {
     data.server = req.params.serverId;
@@ -163,6 +211,7 @@ exports.message_delete_reaction = [
   },
 ];
 
+// Pin a message
 exports.message_pin = (req, res, next) => {
   Message.findByIdAndUpdate(req.params.messageId, { pinned: true }).exec((err, message) => {
     if (err) return next(err);
@@ -170,9 +219,40 @@ exports.message_pin = (req, res, next) => {
   });
 };
 
+// Unpin a message
 exports.message_unpin = (req, res, next) => {
   Message.findByIdAndUpdate(req.params.messageId, { pinned: false }).exec((err, message) => {
     if (err) return next(err);
     return res.redirect(303, message.url);
+  });
+};
+
+// Create a download link for message files
+exports.message_file = (req, res, next) => {
+  if (!isValidObjectId(req.params.messageId)) return res.json({ error: 'Message not found.' });
+  Message.findOne({ _id: req.params.messageId }).exec((err, message) => {
+    if (err) return next(err);
+    if (!message) return res.status(404).json({ error: 'Message not found.' });
+    if (!message?.files[req.params.fileNumber]) return res.status(404).json({ error: 'File not found.' });
+
+    const file = message.files[req.params.fileNumber];
+    const filePath = path.join(__dirname, `../temp/${req.params.messageId}${req.params.fileNumber}.${file.contentType.split('/')[1]}`);
+
+    // Create file from binary data received from MongoDB
+    fs.writeFile(
+      filePath,
+      file.data,
+      (error) => {
+        if (error) next(error);
+
+        // Send the file
+        res.download(
+          filePath,
+          `${file.name}`,
+          // Erase the file
+          () => fs.unlinkSync(filePath),
+        );
+      },
+    );
   });
 };

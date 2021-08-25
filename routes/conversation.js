@@ -2,6 +2,7 @@ const express = require('express');
 const checkAuth = require('../auth/checkAuth');
 const conversationController = require('../controllers/conversationController');
 const messageController = require('../controllers/messageController');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -14,22 +15,21 @@ router.post('/', conversationController.conversation_create);
 // Get conversation details
 router.get('/:conversationId', conversationController.conversation_detail);
 
-router.use(
-  '/:conversationId/*',
+// Create a new conversation message
+router.post(
+  '/:conversationId/messages',
+  upload.files,
   checkAuth.check_user,
   checkAuth.check_conversation,
+  messageController.message_create,
 );
 
 // Get conversation messages
 router.get(
   '/:conversationId/messages',
+  checkAuth.check_user,
+  checkAuth.check_conversation,
   conversationController.conversation_messages,
-);
-
-// Create a new conversation message
-router.post(
-  '/:conversationId/messages',
-  messageController.message_create,
 );
 
 module.exports = router;
