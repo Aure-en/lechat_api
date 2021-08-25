@@ -2,6 +2,7 @@ const { body, validationResult } = require('express-validator');
 const async = require('async');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
+const sharp = require('sharp');
 const path = require('path');
 const User = require('../models/user');
 const Server = require('../models/server');
@@ -9,7 +10,7 @@ const Friend = require('../models/friend');
 
 // Detail of a specific user (GET)
 exports.user_detail = (req, res, next) => {
-  User.findOne({ _id: req.params.userId }, 'username email avatar _id server')
+  User.findOne({ _id: req.params.userId }, 'username email avatar server')
     .populate('server')
     .exec((err, user) => {
       if (err) return next(err);
@@ -273,7 +274,7 @@ exports.user_update_email = [
   },
 ];
 
-exports.user_update_avatar = (req, res, next) => {
+exports.user_update_avatar = async (req, res, next) => {
   if (req.file) {
     // Temporarily saves the image and extracts the data
     const avatar = {
@@ -283,6 +284,25 @@ exports.user_update_avatar = (req, res, next) => {
       ),
       contentType: req.file.mimetype,
     };
+
+    // If the file is huge, create a thumbnail that will be displayed instead.
+    if (req.file.size > 5000) {
+      await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
+        .resize(
+          64,
+          64,
+          {
+            fit: sharp.fit.cover,
+          },
+        )
+        .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+      avatar.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+
+      // Delete the image after using it
+      fs.unlink(path.join(__dirname, `../temp/sm-${req.file.filename}`), (err) => {
+        if (err) throw err;
+      });
+    }
 
     // Delete the image from the disk after using it
     fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
@@ -332,7 +352,7 @@ exports.user_delete = [
     async.parallel(
       [
         // Delete all user friendships
-        function (callback) {
+        (callback) => {
           Friend.deleteMany({
             $or: [
               { sender: req.params.userId },
@@ -342,7 +362,7 @@ exports.user_delete = [
         },
 
         // Decrement server members
-        function (callback) {
+        (callback) => {
           User.findById(req.params.userId, 'server').exec((err, user) => {
             Server.updateMany(
               { _id: { $in: user.server } },
@@ -352,7 +372,7 @@ exports.user_delete = [
         },
 
         // Delete account
-        function (callback) {
+        (callback) => {
           User.findByIdAndRemove(req.params.userId, callback);
         },
       ],
@@ -387,7 +407,7 @@ exports.user_server_join = [
     async.parallel(
       [
         // Join the server
-        function (callback) {
+        (callback) => {
           User.findByIdAndUpdate(
             req.params.userId,
             { $push: { server: req.params.serverId } },
@@ -396,7 +416,7 @@ exports.user_server_join = [
         },
 
         // Increment server members
-        function (callback) {
+        (callback) => {
           Server.findByIdAndUpdate(
             req.params.serverId,
             { $inc: { members: 1 } },

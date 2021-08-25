@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 const { isValidObjectId } = require('mongoose');
 const Message = require('../models/message');
 
@@ -24,29 +25,54 @@ exports.message_detail = (req, res, next) => {
 };
 
 // Create a message (POST)
-exports.message_create = (req, res, next) => {
+exports.message_create = async (req, res, next) => {
   const data = {
     author: req.user._id.toString(),
     text: req.body.text,
     timestamp: Date.now(),
   };
 
-  if (req.files) {
+  if (req.files?.length > 0) {
     const files = [];
-    req.files.map((file) => {
-      // Push the image in images
-      files.push({
+    await Promise.all(req.files.map(async (file) => {
+      const toFiles = {
         name: file.filename,
         data: fs.readFileSync(path.join(__dirname, `../temp/${file.filename}`)),
         contentType: file.mimetype,
         size: file.size,
-      });
+      };
 
-      // Delete the image from the disk after using it
+      /**
+       * Create thumbnail if:
+       * - The file is an image
+       * - The image is big (> 5kB)
+       */
+      if (file.mimetype.split('/')[0] === 'image' && file.size > 5000) {
+        await sharp(path.join(__dirname, `../temp/${file.filename}`))
+          .resize(
+            64,
+            64,
+            {
+              fit: sharp.fit.cover,
+            },
+          )
+          .toFile(path.join(__dirname, `../temp/sm-${file.filename}`));
+        toFiles.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${file.filename}`));
+
+        // Delete the thumbnail from the disk after using it
+        fs.unlink(path.join(__dirname, `../temp/sm-${file.filename}`), (err) => {
+          if (err) throw err;
+        });
+      }
+
+      files.push(toFiles);
+
+      // Delete the images from the disk after using it
       fs.unlink(path.join(__dirname, `../temp/${file.filename}`), (err) => {
         if (err) throw err;
       });
-    });
+    }));
+
     data.files = files;
   }
 

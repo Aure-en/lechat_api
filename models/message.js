@@ -17,6 +17,7 @@ const MessageSchema = new Schema({
       data: Buffer,
       contentType: String,
       size: Number,
+      thumbnail: Buffer,
     },
   ],
   reaction: [

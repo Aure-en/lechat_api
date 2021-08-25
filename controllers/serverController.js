@@ -2,6 +2,7 @@ const async = require('async');
 const { body, validationResult } = require('express-validator');
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 const { isValidObjectId } = require('mongoose');
 const Server = require('../models/server');
 const User = require('../models/user');
@@ -82,7 +83,7 @@ exports.server_create = [
   },
 
   // Form is valid.
-  (req, res, next) => {
+  async (req, res, next) => {
     const data = {
       name: req.body.name,
       admin: req.user._id.toString(),
@@ -100,6 +101,25 @@ exports.server_create = [
         ),
         contentType: req.file.mimetype,
       };
+
+      // If the file is huge, create a thumbnail that will be displayed instead.
+      if (req.file.size > 5000) {
+        await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
+          .resize(
+            64,
+            64,
+            {
+              fit: sharp.fit.cover,
+            },
+          )
+          .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+        data.icon.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+
+        // Delete the image after using it
+        fs.unlink(path.join(__dirname, `../temp/sm-${req.file.filename}`), (err) => {
+          if (err) throw err;
+        });
+      }
       // Delete the image from the disk after using it
       fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
         if (err) throw err;
@@ -148,7 +168,7 @@ exports.server_update = [
   },
 
   // Form is valid. Save the server.
-  (req, res, next) => {
+  async (req, res, next) => {
     const server = {
       name: req.body.name,
       about: req.body.about,
@@ -163,6 +183,25 @@ exports.server_update = [
         ),
         contentType: req.file.mimetype,
       };
+
+      // If the file is huge, create a thumbnail that will be displayed instead.
+      if (req.file.size > 5000) {
+        await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
+          .resize(
+            64,
+            64,
+            {
+              fit: sharp.fit.cover,
+            },
+          )
+          .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+        icon.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+
+        // Delete the image after using it
+        fs.unlink(path.join(__dirname, `../temp/sm-${req.file.filename}`), (err) => {
+          if (err) throw err;
+        });
+      }
 
       // Delete the image from the disk after using it
       fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {

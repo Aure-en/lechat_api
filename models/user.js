@@ -15,6 +15,7 @@ const UserSchema = new Schema({
     name: String,
     data: Buffer,
     contentType: String,
+    thumbnail: Buffer,
   },
   server: [{ type: Schema.Types.ObjectId, ref: 'Server' }],
   timestamp: Date,
