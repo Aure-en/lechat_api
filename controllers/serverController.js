@@ -195,7 +195,7 @@ exports.server_update = [
             },
           )
           .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
-        icon.data = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+        icon.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
 
         // Delete the image after using it
         fs.unlink(path.join(__dirname, `../temp/sm-${req.file.filename}`), (err) => {
