@@ -43,7 +43,7 @@ exports.message_create = async (req, res, next) => {
       };
 
       /**
-       * Create thumbnail if:
+       * Create data if:
        * - The file is an image
        * - The image is big (> 5kB)
        */

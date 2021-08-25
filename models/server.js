@@ -10,7 +10,6 @@ const ServerSchema = new Schema({
     name: String,
     data: Buffer,
     contentType: String,
-    thumbnail: Buffer,
   },
   members: { type: Number, required: true, default: 1 },
   about: String,

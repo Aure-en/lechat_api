@@ -285,7 +285,7 @@ exports.user_update_avatar = async (req, res, next) => {
       contentType: req.file.mimetype,
     };
 
-    // If the file is huge, create a thumbnail that will be displayed instead.
+    // If the file is huge, create a data that will be displayed instead.
     if (req.file.size > 5000) {
       await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
         .resize(
@@ -296,7 +296,7 @@ exports.user_update_avatar = async (req, res, next) => {
           },
         )
         .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
-      avatar.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+      avatar.data = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
 
       // Delete the image after using it
       fs.unlink(path.join(__dirname, `../temp/sm-${req.file.filename}`), (err) => {

@@ -102,7 +102,7 @@ exports.server_create = [
         contentType: req.file.mimetype,
       };
 
-      // If the file is huge, create a thumbnail that will be displayed instead.
+      // If the file is huge, create a data that will be displayed instead.
       if (req.file.size > 5000) {
         await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
           .resize(
@@ -113,7 +113,7 @@ exports.server_create = [
             },
           )
           .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
-        data.icon.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+        data.icon.data = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
 
         // Delete the image after using it
         fs.unlink(path.join(__dirname, `../temp/sm-${req.file.filename}`), (err) => {
@@ -184,7 +184,7 @@ exports.server_update = [
         contentType: req.file.mimetype,
       };
 
-      // If the file is huge, create a thumbnail that will be displayed instead.
+      // If the file is huge, create a data that will be displayed instead.
       if (req.file.size > 5000) {
         await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
           .resize(
@@ -195,7 +195,7 @@ exports.server_update = [
             },
           )
           .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
-        icon.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+        icon.data = fs.readFileSync(path.join(__dirname, `../temp/sm-${req.file.filename}`));
 
         // Delete the image after using it
         fs.unlink(path.join(__dirname, `../temp/sm-${req.file.filename}`), (err) => {
