@@ -42,6 +42,7 @@ exports.auth_login = [
   },
 ];
 
+// POST Sign up
 exports.auth_signup = [
   body('username', 'Username must be specified').trim().isLength({ min: 1 }),
   body('email')
@@ -129,3 +130,16 @@ exports.auth_signup = [
     });
   },
 ];
+
+// Used to tell the client their JWT is still valid.
+exports.auth_check = (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, (err, userId) => {
+    if (err) return next(err);
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ error: 'Invalid user.' });
+    }
+    return res.json({ success: 'Valid user.' });
+  })(req, res, next);
+};

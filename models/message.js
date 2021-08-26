@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 const MessageSchema = new Schema({
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   text: { type: String },
-  timestamp: { type: Number, required: true },
+  timestamp: { type: Number, default: Date.now() },
   server: { type: Schema.Types.ObjectId, ref: 'Server' },
   channel: { type: Schema.Types.ObjectId, ref: 'Channel' },
   conversation: { type: Schema.Types.ObjectId, ref: 'Conversation' },

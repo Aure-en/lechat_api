@@ -3,8 +3,6 @@ const Channel = require('../../models/channel');
 
 const realtime = (io, change, section) => {
 // section is either 'category' or 'channel'
-  console.log('SECTION CHANGE', change);
-
   switch (change.operationType) {
     case 'insert':
     case 'update':

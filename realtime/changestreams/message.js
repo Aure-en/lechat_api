@@ -8,6 +8,7 @@ exports.init = (io) => {
       case 'update':
 
         // Get the whole message to populate the author
+        // as change.fullDocument only sends the user _id.
         Message.findById(change.documentKey._id)
           .populate('author', 'username avatar')
           .exec((err, message) => {

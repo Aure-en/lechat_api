@@ -106,8 +106,8 @@ exports.server_create = [
       if (req.file.size > 5000) {
         await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
           .resize(
-            64,
-            64,
+            300,
+            300,
             {
               fit: sharp.fit.cover,
             },
@@ -188,8 +188,8 @@ exports.server_update = [
       if (req.file.size > 5000) {
         await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
           .resize(
-            64,
-            64,
+            250,
+            250,
             {
               fit: sharp.fit.cover,
             },

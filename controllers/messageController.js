@@ -26,10 +26,17 @@ exports.message_detail = (req, res, next) => {
 
 // Create a message (POST)
 exports.message_create = async (req, res, next) => {
+  /**
+   * Timestamp is needed because:
+   * - In the front end, when the author sends a messages,
+   *   it is displayed before being sent to the DB.
+   * - After it is sent to the DB, it is replaced on the
+   *   front end thanks to the same timestamp.
+   */
   const data = {
     author: req.user._id.toString(),
     text: req.body.text,
-    timestamp: Date.now(),
+    timestamp: req.body.timestamp || Date.now(),
   };
 
   if (req.files?.length > 0) {
