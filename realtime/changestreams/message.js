@@ -1,71 +1,23 @@
-const async = require('async');
 const Message = require('../../models/message');
-const User = require('../../models/user');
 
 exports.init = (io) => {
-  const changeStream = Message.watch([], { fullDocument: 'updateLookup' });
+  const changeStream = Message.watch();
   changeStream.on('change', (change) => {
     switch (change.operationType) {
       case 'insert':
       case 'update':
-        if (!change.fullDocument) return;
-        const document = { ...change.fullDocument };
 
-        /**
-         * Get the author's informations (username and avatar)
-         * If there are files, get them (somehow, the src does not work
-         * if taken directly from change.fullDocument).
-         * Place all those informations in document, and send it to the client.
-         */
-        async.parallel(
-          {
-            user(callback) {
-              User.findById(document.author, 'username avatar').exec(callback);
-            },
-
-            files(callback) {
-              if (document.files.length > 0) {
-                // Fetch images
-                Message.findById(document._id, 'files').exec(callback);
-              } else {
-                callback();
-              }
-            },
-          },
-          (err, results) => {
-            document.author = {
-              _id: change.fullDocument.author.toString(),
-              username: results.user.username,
-              avatar:
-                Object.keys(results.user.avatar).length > 0
-                && results.user.avatar,
-            };
-
-            document._id = document._id.toString();
-
-            if (document.server && document.channel) {
-              document.server = document.server.toString();
-              document.channel = document.channel.toString();
-            }
-
-            if (document.conversation) {
-              document.conversation = document.conversation.toString();
-            }
-
-            if (results.files) {
-              document.files = document.files.map((file, index) => (file.contentType.split('/')[0] === 'image'
-                ? results.files.files[index]
-                : file));
-            }
-
+        // Get the whole message to populate the author
+        Message.findById(change.documentKey._id)
+          .populate('author', 'username avatar')
+          .exec((err, message) => {
             // Emit the message to the room
-            const room = document.server || document.conversation;
+            const room = message.server || message.conversation;
             io.in(room.toString()).emit(`${change.operationType} message`, {
               operation: change.operationType,
-              document,
+              document: message,
             });
-          },
-        );
+          });
 
         break;
 
