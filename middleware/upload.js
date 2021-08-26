@@ -7,8 +7,7 @@ const multerStorage = multer.diskStorage({
     cb(null, path.join(__dirname, '../temp'));
   },
   filename: (req, file, cb) => {
-    const ext = file.mimetype.split('/')[1];
-    cb(null, `item-${Date.now()}.${ext}`);
+    cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 
