@@ -21,20 +21,28 @@ API used to create a chat website where users can hang out in servers or private
 * MongoDB database
 
 ### Installation
+#### Get the repository
 ```
 $ git clone git@github.com:Aure-en/lechat_api.git
 $ cd lechat_api
 $ npm install
 ```
 
-### Set up environment variables
+#### Set up environment variables
 Create a .env file in the root directory and set the following variables
 ```
 MONGODB_URI=yourdb
 JWT_SECRET=yourJWTsecret
 ```
 
-### Start
+#### Start
 ```
 $ npm run start
 ```
+
+## Technologies
+* Node.js
+* Express
+* MongoDB
+* Socket.io
+* View dependencies in [package.json](https://github.com/Aure-en/lechat_api/blob/master/package.json)
