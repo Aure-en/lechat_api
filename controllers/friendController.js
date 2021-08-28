@@ -6,7 +6,22 @@ exports.friend_list = (req, res, next) => {
     status: true,
     $or: [{ sender: req.params.userId }, { recipient: req.params.userId }],
   })
-    .populate('sender recipient', '-password -server')
+    .populate({
+      path: 'sender',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
+    .populate({
+      path: 'recipient',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
     .exec((err, friends) => {
       if (err) return next(err);
       return res.json(friends);
@@ -19,7 +34,22 @@ exports.friend_list_pending = (req, res, next) => {
     status: false,
     $or: [{ sender: req.params.userId }, { recipient: req.params.userId }],
   })
-    .populate('sender recipient', '-password -server')
+    .populate({
+      path: 'sender',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
+    .populate({
+      path: 'recipient',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
     .exec((err, friends) => {
       if (err) return next(err);
       return res.json(friends);

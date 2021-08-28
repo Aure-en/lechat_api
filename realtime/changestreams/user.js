@@ -5,10 +5,7 @@ exports.init = (io) => {
   changeStream.on('change', (change) => {
     if (change.operationType !== 'update') return;
 
-    // I have no idea why the icon won't display properly
-    // on the front-end when I simply send the change.fullDocument.
-    // The binary data doesn't work on src (?)
-    User.findById(change.fullDocument._id).exec((err, res) => {
+    User.findById(change.fullDocument._id).populate('avatar').exec((err, res) => {
       // Personal account changes are only sent to the user itself.
       io.in(change.fullDocument._id.toString()).emit('account update', {
         operation: change.operationType,

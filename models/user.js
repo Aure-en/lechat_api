@@ -14,6 +14,7 @@ const UserSchema = new Schema({
   avatar: { type: Schema.Types.ObjectId, ref: 'File' },
   server: [{ type: Schema.Types.ObjectId, ref: 'Server' }],
   timestamp: Date,
+  active: { type: Boolean, default: true },
 });
 
 UserSchema.virtual('url').get(function () {

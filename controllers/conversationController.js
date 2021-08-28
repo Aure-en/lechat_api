@@ -7,12 +7,23 @@ const queries = require('../utils/queries');
 
 // List a conversation informations
 exports.conversation_detail = (req, res, next) => {
-  if (!isValidObjectId(req.params.conversationId)) return res.json({ error: 'Invalid id.' });
+  if (!isValidObjectId(req.params.conversationId)) {
+    return res.json({ error: 'Invalid id.' });
+  }
   Conversation.findById(req.params.conversationId)
-    .populate('members', 'username avatar')
+    .populate({
+      path: 'members',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
     .exec((err, conversation) => {
       if (err) return next(err);
-      if (!conversation) return res.status(404).json({ error: 'Conversation not found.' });
+      if (!conversation) {
+        return res.status(404).json({ error: 'Conversation not found.' });
+      }
       return res.json(conversation);
     });
 };
@@ -21,7 +32,14 @@ exports.conversation_detail = (req, res, next) => {
 exports.conversation_existence = (req, res, next) => {
   const members = req.query.members.split(',');
   Conversation.findOne({ members: { $all: members } })
-    .populate('members', 'username avatar')
+    .populate({
+      path: 'members',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
     .exec((err, conversation) => {
       if (err) return res.json({ errors: 'Members not found.' });
       return res.json(conversation);
@@ -30,17 +48,27 @@ exports.conversation_existence = (req, res, next) => {
 
 // List all the conversations of a specific user (GET)
 exports.conversation_list = (req, res, next) => {
-  Conversation.find({ members: req.user._id }, '_id').populate('members', 'username avatar').exec(
-    (err, conversations) => {
+  Conversation.find({ members: req.user._id }, '_id')
+    .populate({
+      path: 'members',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
+    .exec((err, conversations) => {
       if (err) return next(err);
       return res.json(conversations);
-    },
-  );
+    });
 };
 
 // List messages from a conversation (GET)
 exports.conversation_messages = (req, res, next) => {
-  if (!isValidObjectId(req.params.conversationId)) return res.json({ error: 'Invalid id.' });
+  if (!isValidObjectId(req.params.conversationId)) {
+    return res.json({ error: 'Invalid id.' });
+  }
+
   const limit = req.query.limit || 100;
   Message.find({
     conversation: req.params.conversationId,
@@ -49,7 +77,15 @@ exports.conversation_messages = (req, res, next) => {
   })
     .sort({ timestamp: -1 })
     .limit(limit * 1) // Convert to number
-    .populate('author', 'username avatar')
+    .populate('files')
+    .populate({
+      path: 'author',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
     .populate({
       path: 'reaction',
       populate: {

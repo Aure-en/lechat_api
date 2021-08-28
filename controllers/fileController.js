@@ -34,7 +34,7 @@ exports.file_download = (req, res, next) => {
 // Send a full-size image.
 exports.file_data = (req, res, next) => {
   if (!isValidObjectId(req.params.fileId)) return res.json({ error: 'File not found.' });
-  File.findOne({ _id: req.params.fileId }, 'name data contentType size').exec((err, file) => {
+  File.findOne({ _id: req.params.fileId }).exec((err, file) => {
     if (err) return next(err);
     if (!file) return res.status(404).json({ error: 'File not found.' });
     return res.json(file);

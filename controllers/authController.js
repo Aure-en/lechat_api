@@ -32,12 +32,18 @@ exports.auth_login = [
           ],
         });
       }
-      req.login(user, { session: false }, (err) => {
-        if (err) res.send(err);
-        // Generate a JWT with the contents of user object
-        const token = jwt.sign(user._id.toJSON(), process.env.JWT_SECRET);
-        return res.json({ user, token });
-      });
+
+      User.findOne({ _id: user._id })
+        .populate('avatar')
+        .exec((err, user) => {
+          if (err) return next(err);
+          req.login(user, { session: false }, (err) => {
+            if (err) res.send(err);
+            // Generate a JWT with the contents of user object
+            const token = jwt.sign(user._id.toJSON(), process.env.JWT_SECRET);
+            return res.json({ user, token });
+          });
+        });
     })(req, res);
   },
 ];
