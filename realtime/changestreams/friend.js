@@ -14,11 +14,11 @@ exports.init = (io) => {
         async.parallel(
           {
             recipient(callback) {
-              User.findOne({ _id: document.recipient }).exec(callback);
+              User.findOne({ _id: document.recipient }).populate('avatar').exec(callback);
             },
 
             sender(callback) {
-              User.findOne({ _id: document.sender }).exec(callback);
+              User.findOne({ _id: document.sender }).populate('avatar').exec(callback);
             },
           },
           (err, results) => {

@@ -12,7 +12,14 @@ exports.init = (io) => {
         const { members } = document;
 
         Conversation.findById(change.fullDocument._id, 'members')
-          .populate('members', 'username avatar')
+          .populate({
+            path: 'members',
+            select: 'username avatar',
+            populate: {
+              path: 'avatar',
+              model: 'File',
+            },
+          })
           .exec((err, conversation) => {
             members.forEach((member) => {
               io.in(member._id.toString()).emit('insert conversation', {
