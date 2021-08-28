@@ -392,7 +392,16 @@ exports.server_delete = (req, res, next) => {
 
       // Delete the server itself
       (callback) => {
-        Server.findByIdAndDelete(req.params.serverId).exec(callback);
+        Server.findByIdAndRemove(req.params.serverId, async (err, server) => {
+          if (err) return next(err);
+
+          // Delete server icon file if there was one
+          if (server.icon) {
+            File.deleteOne({ _id: server.icon }).exec(callback);
+          } else {
+            callback();
+          }
+        });
       },
     ],
     (err) => {
