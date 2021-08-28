@@ -11,11 +11,7 @@ const UserSchema = new Schema({
     trim: true,
     lowercase: true,
   },
-  avatar: {
-    name: String,
-    data: Buffer,
-    contentType: String,
-  },
+  avatar: { type: Schema.Types.ObjectId, ref: 'File' },
   server: [{ type: Schema.Types.ObjectId, ref: 'Server' }],
   timestamp: Date,
 });

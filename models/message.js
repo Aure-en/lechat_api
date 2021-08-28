@@ -11,15 +11,7 @@ const MessageSchema = new Schema({
   conversation: { type: Schema.Types.ObjectId, ref: 'Conversation' },
   edited: { type: Boolean },
   pinned: { type: Boolean },
-  files: [
-    {
-      name: String,
-      data: Buffer,
-      contentType: String,
-      size: Number,
-      thumbnail: Buffer,
-    },
-  ],
+  files: [{ type: Schema.Types.ObjectId, ref: 'File' }],
   reaction: [
     new Schema({
       emote: { type: Schema.Types.ObjectId, ref: 'Emote' },

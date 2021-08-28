@@ -9,6 +9,7 @@ const friendRouter = require('./friend');
 const emoteRouter = require('./emote');
 const conversationRouter = require('./conversation');
 const activityRouter = require('./activity');
+const fileRouter = require('./file');
 
 const router = express.Router();
 
@@ -27,5 +28,6 @@ router.use('/friends', friendRouter);
 router.use('/emotes', emoteRouter);
 router.use('/conversations', conversationRouter);
 router.use('/activity', activityRouter);
+router.use('/files', fileRouter);
 
 module.exports = router;
