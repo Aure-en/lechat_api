@@ -6,12 +6,7 @@ const ServerSchema = new Schema({
   name: { type: String, required: true },
   timestamp: { type: Date, required: true },
   admin: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  icon: {
-    name: String,
-    data: Buffer,
-    contentType: String,
-    thumbnail: Buffer,
-  },
+  icon: { type: Schema.Types.ObjectId, ref: 'File' },
   members: { type: Number, required: true, default: 1 },
   about: String,
 });

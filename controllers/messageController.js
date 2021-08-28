@@ -1,20 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const { isValidObjectId } = require('mongoose');
 const Message = require('../models/message');
+const File = require('../models/file');
 
 // Details of a specific message (GET)
 exports.message_detail = (req, res, next) => {
   Message.findById(req.params.messageId)
-    .populate('author', 'username avatar')
-    .populate({
-      path: 'reaction',
-      populate: {
-        path: 'emote',
-        model: 'Emote',
-      },
-    })
     .exec((err, message) => {
       if (err) return next(err);
       if (!message) {
@@ -27,11 +19,11 @@ exports.message_detail = (req, res, next) => {
 // Create a message (POST)
 exports.message_create = async (req, res, next) => {
   /**
-   * Timestamp is needed because:
+   * Timestamp is needed because to identify a message.
    * - In the front end, when the author sends a messages,
    *   it is displayed before being sent to the DB.
-   * - After it is sent to the DB, it is replaced on the
-   *   front end thanks to the same timestamp.
+   * - After it is sent to the DB, it is identified on
+   *   the front-end by its id and replaced.
    */
   const data = {
     author: req.user._id.toString(),
@@ -39,10 +31,22 @@ exports.message_create = async (req, res, next) => {
     timestamp: req.body.timestamp || Date.now(),
   };
 
+  if (req.params.serverId && req.params.channelId) {
+    data.server = req.params.serverId;
+    data.channel = req.params.channelId;
+  } else if (req.params.conversationId) {
+    data.conversation = req.params.conversationId;
+  }
+
+  /* If there are files:
+   * 1. Save them as File object (with a thumbnail if the file is an image)
+   * 2. Add the resulting ObjectIds to the message data.files.
+   * 3. Save the message.
+   */
   if (req.files?.length > 0) {
     const files = [];
     await Promise.all(req.files.map(async (file) => {
-      const toFiles = {
+      const fileData = {
         name: file.filename,
         data: fs.readFileSync(path.join(__dirname, `../temp/${file.filename}`)),
         contentType: file.mimetype,
@@ -50,7 +54,7 @@ exports.message_create = async (req, res, next) => {
       };
 
       /**
-       * Create data if:
+       * Create thumbnail if:
        * - The file is an image
        * - The image is big (> 5kB)
        */
@@ -63,8 +67,9 @@ exports.message_create = async (req, res, next) => {
               fit: sharp.fit.cover,
             },
           )
+          .toFormat('webp')
           .toFile(path.join(__dirname, `../temp/sm-${file.filename}`));
-        toFiles.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${file.filename}`));
+        fileData.thumbnail = fs.readFileSync(path.join(__dirname, `../temp/sm-${file.filename}`));
 
         // Delete the thumbnail from the disk after using it
         fs.unlink(path.join(__dirname, `../temp/sm-${file.filename}`), (err) => {
@@ -72,22 +77,17 @@ exports.message_create = async (req, res, next) => {
         });
       }
 
-      files.push(toFiles);
-
       // Delete the images from the disk after using it
       fs.unlink(path.join(__dirname, `../temp/${file.filename}`), (err) => {
         if (err) throw err;
       });
+
+      const fileObj = new File(fileData);
+
+      const toFiles = await fileObj.save();
+      files.push(toFiles._id);
     }));
-
     data.files = files;
-  }
-
-  if (req.params.serverId && req.params.channelId) {
-    data.server = req.params.serverId;
-    data.channel = req.params.channelId;
-  } else if (req.params.conversationId) {
-    data.conversation = req.params.conversationId;
   }
 
   const message = new Message(data);
@@ -113,8 +113,14 @@ exports.message_update = (req, res, next) => {
 
 // Delete a message
 exports.message_delete = (req, res, next) => {
-  Message.findByIdAndRemove(req.params.messageId, (err) => {
+  Message.findByIdAndRemove(req.params.messageId, async (err, message) => {
     if (err) return next(err);
+
+    // Delete all the files linked to the message.
+    await Promise.all(message.files.map(async (file) => {
+      File.deleteOne({ _id: file._id });
+    }));
+
     return res.json({ success: 'Message deleted.' });
   });
 };
@@ -140,7 +146,9 @@ exports.message_add_reaction = [
       let reactions = res.locals.message.reaction;
       reactions = reactions.map((reaction) => {
         if (reaction.emote.toString() === req.params.emoteId) {
-          if (!reaction.users.includes(req.user._id.toString())) reaction.users.push(req.user._id.toString());
+          if (!reaction.users.includes(req.user._id.toString())) {
+            reaction.users.push(req.user._id.toString());
+          }
         }
         return reaction;
       });
@@ -231,35 +239,5 @@ exports.message_unpin = (req, res, next) => {
   Message.findByIdAndUpdate(req.params.messageId, { pinned: false }).exec((err, message) => {
     if (err) return next(err);
     return res.redirect(303, message.url);
-  });
-};
-
-// Create a download link for message files
-exports.message_file = (req, res, next) => {
-  if (!isValidObjectId(req.params.messageId)) return res.json({ error: 'Message not found.' });
-  Message.findOne({ _id: req.params.messageId }).exec((err, message) => {
-    if (err) return next(err);
-    if (!message) return res.status(404).json({ error: 'Message not found.' });
-    if (!message?.files[req.params.fileNumber]) return res.status(404).json({ error: 'File not found.' });
-
-    const file = message.files[req.params.fileNumber];
-    const filePath = path.join(__dirname, `../temp/${req.params.messageId}${req.params.fileNumber}.${file.contentType.split('/')[1]}`);
-
-    // Create file from binary data received from MongoDB
-    fs.writeFile(
-      filePath,
-      file.data,
-      (error) => {
-        if (error) next(error);
-
-        // Send the file
-        res.download(
-          filePath,
-          `${file.name}`,
-          // Erase the file
-          () => fs.unlinkSync(filePath),
-        );
-      },
-    );
   });
 };

@@ -7,10 +7,17 @@ exports.init = (io) => {
       case 'insert':
       case 'update':
 
-        // Get the whole message to populate the author
-        // as change.fullDocument only sends the user _id.
+        // Get the whole message to populate the author and files.
         Message.findById(change.documentKey._id)
-          .populate('author', 'username avatar')
+          .populate('files')
+          .populate({
+            path: 'author',
+            select: 'username avatar',
+            populate: {
+              path: 'avatar',
+              model: 'File',
+            },
+          })
           .exec((err, message) => {
             // Emit the message to the room
             const room = message.server || message.conversation;

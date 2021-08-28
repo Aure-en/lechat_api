@@ -43,7 +43,15 @@ exports.channel_messages = (req, res, next) => {
   })
     .sort({ timestamp: -1 })
     .limit(limit * 1) // Convert to number
-    .populate('author', 'username _id avatar')
+    .populate('files')
+    .populate({
+      path: 'author',
+      select: 'username avatar',
+      populate: {
+        path: 'avatar',
+        model: 'File',
+      },
+    })
     .populate({
       path: 'reaction',
       populate: {
