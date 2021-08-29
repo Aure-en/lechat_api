@@ -94,7 +94,7 @@ exports.message_create = async (req, res, next) => {
 
   message.save((err) => {
     if (err) return next(err);
-    return res.redirect(303, message.url);
+    return res.status(201).json(message);
   });
 };
 
@@ -103,10 +103,10 @@ exports.message_update = (req, res, next) => {
   Message.findByIdAndUpdate(
     req.params.messageId,
     { text: req.body.text, edited: true },
-    {},
+    { new: true },
     (err, message) => {
       if (err) return next(err);
-      return res.redirect(303, message.url);
+      return res.json(message);
     },
   );
 };
@@ -228,16 +228,20 @@ exports.message_delete_reaction = [
 
 // Pin a message
 exports.message_pin = (req, res, next) => {
-  Message.findByIdAndUpdate(req.params.messageId, { pinned: true }).exec((err, message) => {
+  Message.findByIdAndUpdate(
+    req.params.messageId, { pinned: true }, { new: true },
+  ).exec((err, message) => {
     if (err) return next(err);
-    return res.redirect(303, message.url);
+    return res.json(message);
   });
 };
 
 // Unpin a message
 exports.message_unpin = (req, res, next) => {
-  Message.findByIdAndUpdate(req.params.messageId, { pinned: false }).exec((err, message) => {
+  Message.findByIdAndUpdate(
+    req.params.messageId, { pinned: false }, { new: true },
+  ).exec((err, message) => {
     if (err) return next(err);
-    return res.redirect(303, message.url);
+    return res.json(message);
   });
 };

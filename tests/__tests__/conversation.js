@@ -60,8 +60,8 @@ describe('Conversation creation', () => {
       .redirects(1);
     expect(res.body.members).toEqual(
       expect.arrayContaining([
-        { _id: user1.user._id, username: user1.user.username },
-        { _id: user2.user._id, username: user2.user.username },
+        user1.user._id,
+        user2.user._id,
       ]),
     );
     done();

@@ -75,8 +75,7 @@ describe('Server update', () => {
 
   test('Only a registered user can join a server', async (done) => {
     const res = await request(app)
-      .post(`/users/${user.user._id}/servers/${server._id}`)
-      .redirects(1);
+      .post(`/users/${user.user._id}/servers/${server._id}`);
     expect(res.status).toBe(401);
     done();
   });
@@ -93,8 +92,7 @@ describe('Server update', () => {
   test('A registered user can leave a server', async (done) => {
     const res = await request(app)
       .delete(`/users/${user.user._id}/servers/${server._id}`)
-      .set({ Authorization: `Bearer ${user.token}` })
-      .redirects(1);
+      .set({ Authorization: `Bearer ${user.token}` });
     expect(res.body.server).not.toEqual(expect.arrayContaining([server._id]));
     done();
   });
@@ -122,8 +120,7 @@ describe('Username update', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ username: 'Renamed', password: 'user_password' })
-      .redirects(1);
+      .send({ username: 'Renamed', password: 'user_password' });
     expect(res.body.username).toBe('Renamed');
     done();
   });
@@ -184,8 +181,7 @@ describe('Email update', () => {
         Authorization: `Bearer ${user.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ email: 'new@user.com', password: 'user_password' })
-      .redirects(1);
+      .send({ email: 'new@user.com', password: 'user_password' });
     expect(res.body.email).toBe('new@user.com');
     done();
   });
@@ -275,7 +271,7 @@ describe('Avatar update', () => {
       .set({
         Authorization: `Bearer ${user.token}`,
       })
-      .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
+      .attach('image', path.resolve(__dirname, '../assets/image.svg'))
       .redirects(1);
     expect(res.body.avatar).toBeDefined();
     done();
@@ -286,8 +282,7 @@ describe('Avatar update', () => {
       .put(`/users/${user.user._id}/avatar`)
       .set({
         Authorization: `Bearer ${user.token}`,
-      })
-      .redirects(1);
+      });
     expect(res.body.avatar).not.toBeDefined();
     done();
   });

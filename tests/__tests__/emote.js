@@ -25,7 +25,7 @@ describe('Creation', () => {
       .post('/emotes')
       .field('name', 'heart')
       .field('category', 'shape')
-      .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
+      .attach('image', path.resolve(__dirname, '../assets/image.svg'))
       .redirects(1);
     expect(res.body.name).toBe(':heart:');
     expect(res.body.category).toBe('shape');
@@ -38,13 +38,13 @@ describe('Creation', () => {
       .post('/emotes')
       .field('name', 'emote')
       .field('category', 'shape')
-      .attach('image', path.resolve(__dirname, '../assets/emote.svg'));
+      .attach('image', path.resolve(__dirname, '../assets/image.svg'));
 
     const res = await request(app)
       .post('/emotes')
       .field('name', 'emote')
       .field('category', 'shape')
-      .attach('image', path.resolve(__dirname, '../assets/emote.svg'));
+      .attach('image', path.resolve(__dirname, '../assets/image.svg'));
     expect(
       res.body.errors.filter((err) => err.msg.match(/name is already taken/i))
         .length,
@@ -67,7 +67,7 @@ describe('Update', () => {
       .post('/emotes')
       .field('name', 'update')
       .field('category', 'shape')
-      .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
+      .attach('image', path.resolve(__dirname, '../assets/image.svg'))
       .redirects(1);
     emote = res.body;
     done();
@@ -78,7 +78,7 @@ describe('Update', () => {
       .put(`/emotes/${emote._id}`)
       .field('name', 'heart')
       .field('category', 'other')
-      .attach('image', path.resolve(__dirname, '../assets/emote.svg'));
+      .attach('image', path.resolve(__dirname, '../assets/image.svg'));
     expect(
       res.body.errors.filter((err) => err.msg.match(/name is already taken/i))
         .length,
@@ -91,7 +91,7 @@ describe('Update', () => {
       .put(`/emotes/${emote._id}`)
       .field('name', 'updated')
       .field('category', 'other')
-      .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
+      .attach('image', path.resolve(__dirname, '../assets/image.svg'))
       .redirects(1);
     expect(res.body.name).toBe(':updated:');
     expect(res.body.category).toBe('other');
@@ -105,7 +105,7 @@ test('Emotes can be deleted', async (done) => {
   const res = await request(app)
     .post('/emotes')
     .field('name', 'delete')
-    .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
+    .attach('image', path.resolve(__dirname, '../assets/image.svg'))
     .redirects(1);
   const emote = res.body;
 

@@ -115,10 +115,10 @@ exports.user_update_username = [
     User.findByIdAndUpdate(
       req.params.userId,
       { username: req.body.username },
-      {},
+      { new: true },
       (err, user) => {
         if (err) return next(err);
-        res.redirect(303, user.url);
+        return res.json(user);
       },
     );
   },
@@ -199,10 +199,10 @@ exports.user_update_password = [
       User.findByIdAndUpdate(
         req.params.userId,
         { password: hashedPassword },
-        {},
+        { new: true },
         (err, user) => {
           if (err) return next(err);
-          return res.redirect(303, user.url);
+          return res.json(user);
         },
       );
     });
@@ -273,10 +273,10 @@ exports.user_update_email = [
     User.findByIdAndUpdate(
       req.params.userId,
       { email: req.body.email },
-      {},
+      { new: true },
       (err, user) => {
         if (err) return next(err);
-        res.redirect(303, user.url);
+        return res.json(user);
       },
     );
   },
@@ -289,14 +289,13 @@ exports.user_update_avatar = async (req, res, next) => {
     User.findByIdAndUpdate(
       req.params.userId,
       { $unset: { avatar: '' } },
-      {},
+      { new: true },
       (err, user) => {
         if (err) return next(err);
-        res.redirect(303, user.url);
+        return res.json(user);
       },
     );
-  }
-
+  } else {
   /**
    * If there is an image, the server icon will be updated.
    * 1. Temporarily save the file in /temp and extracts its data.
@@ -306,87 +305,88 @@ exports.user_update_avatar = async (req, res, next) => {
    * 5. If the server already had an avatar, delete the previous File document.
    */
 
-  // 1. Temporarily saves the image and extracts the data
-  const file = {
-    name: req.file.filename,
-    data: fs.readFileSync(path.join(__dirname, `../temp/${req.file.filename}`)),
-    contentType: req.file.mimetype,
-  };
+    // 1. Temporarily saves the image and extracts the data
+    const file = {
+      name: req.file.filename,
+      data: fs.readFileSync(path.join(__dirname, `../temp/${req.file.filename}`)),
+      contentType: req.file.mimetype,
+    };
 
-  // 2. If the file is huge, create a data that will be displayed instead.
-  if (req.file.size > 5000) {
-    await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
-      .resize(64, 64, {
-        fit: sharp.fit.cover,
-      })
-      .toFormat('webp')
-      .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
-    file.data = fs.readFileSync(
-      path.join(__dirname, `../temp/sm-${req.file.filename}`),
-    );
+    // 2. If the file is huge, create a data that will be displayed instead.
+    if (req.file.size > 5000) {
+      await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
+        .resize(64, 64, {
+          fit: sharp.fit.cover,
+        })
+        .toFormat('webp')
+        .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+      file.data = fs.readFileSync(
+        path.join(__dirname, `../temp/sm-${req.file.filename}`),
+      );
 
-    // Delete the image after using it
-    fs.unlink(
-      path.join(__dirname, `../temp/sm-${req.file.filename}`),
-      (err) => {
-        if (err) throw err;
-      },
-    );
-  }
-
-  // Delete the image from the disk after using it
-  fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
-    if (err) throw err;
-  });
-
-  async.waterfall([
-    // 3. Create a File document to save the file.
-    (callback) => {
-      const avatar = new File(file);
-
-      avatar.save((err, saved) => {
-        if (err) return next(err);
-        callback(null, saved._id);
-      });
-    },
-
-    // 4. Update the user avatar with the new file
-    (avatarId, callback) => {
-      User.findByIdAndUpdate(
-        req.params.userId,
-        { avatar: avatarId },
-        {},
-        (err, user) => {
-          if (err) return next(err);
-          callback(null, user);
+      // Delete the image after using it
+      fs.unlink(
+        path.join(__dirname, `../temp/sm-${req.file.filename}`),
+        (err) => {
+          if (err) throw err;
         },
       );
-    },
+    }
 
-    /* 5. If the user already had an avatar
-     * → Delete the previous file used as the user's avatar.
-     * Send back the new user object.
-     */
-    (user, callback) => {
-      if (user.avatar) {
-        File.deleteOne({ _id: user.avatar }).exec((err) => {
+    // Delete the image from the disk after using it
+    fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
+      if (err) throw err;
+    });
+
+    async.waterfall([
+      // 3. Create a File document to save the file.
+      (callback) => {
+        const avatar = new File(file);
+
+        avatar.save((err, saved) => {
           if (err) return next(err);
-          callback(null, user);
+          callback(null, saved._id);
         });
-      } else {
-        callback(null, user);
-      }
-    },
-  ], (err, user) => {
-    if (err) return next(err);
+      },
 
-    /**
-       * Use a redirect there because user contains the previous
-       * data (before update), so that the previous File document
-       * can be found with the _id and deleted.
+      // 4. Update the user avatar with the new file
+      (avatarId, callback) => {
+        User.findByIdAndUpdate(
+          req.params.userId,
+          { avatar: avatarId },
+          {},
+          (err, user) => {
+            if (err) return next(err);
+            callback(null, user);
+          },
+        );
+      },
+
+      /* 5. If the user already had an avatar
+       * → Delete the previous file used as the user's avatar.
+       * Send back the new user object.
        */
-    return res.redirect(303, user.url);
-  });
+      (user, callback) => {
+        if (user.avatar) {
+          File.deleteOne({ _id: user.avatar }).exec((err) => {
+            if (err) return next(err);
+            callback(null, user);
+          });
+        } else {
+          callback(null, user);
+        }
+      },
+    ], (err, user) => {
+      if (err) return next(err);
+
+      /**
+         * Use a redirect there because user contains the previous
+         * data (before update), so that the previous File document
+         * can be found with the _id and deleted.
+         */
+      return res.redirect(303, user.url);
+    });
+  }
 };
 
 // Delete a user

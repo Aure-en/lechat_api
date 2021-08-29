@@ -11,9 +11,9 @@ exports.activity_create = (req, res, next) => {
     conversations: [],
   });
 
-  activity.save((err) => {
+  activity.save((err, activity) => {
     if (err) return next(err);
-    return res.redirect(303, activity.url);
+    return res.json(activity);
   });
 };
 

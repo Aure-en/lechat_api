@@ -137,9 +137,8 @@ exports.server_create = [
           return res.redirect(303, server.url);
         },
       );
-    }
-
-    /**
+    } else {
+      /**
      * If there is an image, the server icon will be updated.
      * 1. Resize it and temporarily save it in /temp.
      * 2. Save the image in a File document
@@ -147,76 +146,77 @@ exports.server_create = [
      * 4. Save the server and add it the user's server list.
      */
 
-    // 1. Resize the image and save it.
-    const file = {
-      name: req.file.filename,
-      data: fs.readFileSync(
-        path.join(__dirname, `../temp/${req.file.filename}`),
-      ),
-      contentType: req.file.mimetype,
-    };
+      // 1. Resize the image and save it.
+      const file = {
+        name: req.file.filename,
+        data: fs.readFileSync(
+          path.join(__dirname, `../temp/${req.file.filename}`),
+        ),
+        contentType: req.file.mimetype,
+      };
 
-    // If the file is huge, create a thumbnail that will be displayed instead.
-    if (req.file.size > 5000) {
-      await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
-        .resize(300, 300, {
-          fit: sharp.fit.cover,
-        })
-        .toFormat('webp')
-        .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
-      file.data = fs.readFileSync(
-        path.join(__dirname, `../temp/sm-${req.file.filename}`),
-      );
+      // If the file is huge, create a thumbnail that will be displayed instead.
+      if (req.file.size > 5000) {
+        await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
+          .resize(300, 300, {
+            fit: sharp.fit.cover,
+          })
+          .toFormat('webp')
+          .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+        file.data = fs.readFileSync(
+          path.join(__dirname, `../temp/sm-${req.file.filename}`),
+        );
 
-      // Delete the image after using it
+        // Delete the image after using it
+        fs.unlink(
+          path.join(__dirname, `../temp/sm-${req.file.filename}`),
+          (err) => {
+            if (err) throw err;
+          },
+        );
+      }
+      // Delete the image from the disk after using it
       fs.unlink(
-        path.join(__dirname, `../temp/sm-${req.file.filename}`),
+        path.join(__dirname, `../temp/${req.file.filename}`),
         (err) => {
           if (err) throw err;
         },
       );
-    }
-    // Delete the image from the disk after using it
-    fs.unlink(
-      path.join(__dirname, `../temp/${req.file.filename}`),
-      (err) => {
-        if (err) throw err;
-      },
-    );
 
-    // 2. Save the image in a file document.
-    const serverIcon = new File(file);
-    serverIcon.save((err, saved) => {
-      if (err) return next(err);
+      // 2. Save the image in a file document.
+      const serverIcon = new File(file);
+      serverIcon.save((err, saved) => {
+        if (err) return next(err);
 
-      // 3. Add the file document _id to the server data.
-      data.icon = saved._id;
+        // 3. Add the file document _id to the server data.
+        data.icon = saved._id;
 
-      // 4. Save the server
-      const server = new Server(data);
+        // 4. Save the server
+        const server = new Server(data);
 
-      async.parallel(
-        [
+        async.parallel(
+          [
           // Save the server
-          (callback) => {
-            server.save(callback);
-          },
+            (callback) => {
+              server.save(callback);
+            },
 
-          // Add the server to the user's server list
-          (callback) => {
-            User.findByIdAndUpdate(
-              req.user._id.toString(),
-              { $push: { server: server._id } },
-              {},
-            ).exec(callback);
+            // Add the server to the user's server list
+            (callback) => {
+              User.findByIdAndUpdate(
+                req.user._id.toString(),
+                { $push: { server: server._id } },
+                {},
+              ).exec(callback);
+            },
+          ],
+          (err) => {
+            if (err) return next(err);
+            return res.redirect(303, server.url);
           },
-        ],
-        (err) => {
-          if (err) return next(err);
-          return res.redirect(303, server.url);
-        },
-      );
-    });
+        );
+      });
+    }
   },
 ];
 
@@ -248,14 +248,13 @@ exports.server_update = [
       Server.findByIdAndUpdate(
         req.params.serverId,
         server,
-        {},
+        { new: true },
         (err, server) => {
           if (err) return next(err);
-          return res.redirect(303, server.url);
+          return res.json(server);
         },
       );
-    }
-
+    } else {
     /**
      * If there is an image, the server icon will be updated.
      * 1. Temporarily save the file in /temp and extracts its data.
@@ -265,89 +264,90 @@ exports.server_update = [
      * 5. If the server already had an avatar, delete the previous File document.
      */
 
-    // 1. Temporarily saves the image and extracts the data
-    const icon = {
-      name: req.file.filename,
-      data: fs.readFileSync(
-        path.join(__dirname, `../temp/${req.file.filename}`),
-      ),
-      contentType: req.file.mimetype,
-    };
+      // 1. Temporarily saves the image and extracts the data
+      const icon = {
+        name: req.file.filename,
+        data: fs.readFileSync(
+          path.join(__dirname, `../temp/${req.file.filename}`),
+        ),
+        contentType: req.file.mimetype,
+      };
 
-    // 2. If the file is huge, resize it.
-    if (req.file.size > 5000) {
-      await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
-        .resize(300, 300, {
-          fit: sharp.fit.cover,
-        })
-        .toFormat('webp')
-        .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
-      icon.data = fs.readFileSync(
-        path.join(__dirname, `../temp/sm-${req.file.filename}`),
-      );
+      // 2. If the file is huge, resize it.
+      if (req.file.size > 5000) {
+        await sharp(path.join(__dirname, `../temp/${req.file.filename}`))
+          .resize(300, 300, {
+            fit: sharp.fit.cover,
+          })
+          .toFormat('webp')
+          .toFile(path.join(__dirname, `../temp/sm-${req.file.filename}`));
+        icon.data = fs.readFileSync(
+          path.join(__dirname, `../temp/sm-${req.file.filename}`),
+        );
 
-      // Delete the thumbnail after using it
-      fs.unlink(
-        path.join(__dirname, `../temp/sm-${req.file.filename}`),
-        (err) => {
-          if (err) throw err;
-        },
-      );
-    }
-
-    // Delete the image from the disk after using it
-    fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
-      if (err) throw err;
-    });
-
-    async.waterfall([
-      // 3. Save the image in a File document.
-      (callback) => {
-        const serverIcon = new File(icon);
-        serverIcon.save((err, saved) => {
-          if (err) return next(err);
-          callback(null, saved.id);
-        });
-      },
-
-      // 4. Update the server icon with the new image
-      (iconId, callback) => {
-        server.icon = iconId;
-        Server.findByIdAndUpdate(
-          req.params.serverId,
-          server,
-          {},
-          (err, server) => {
-            if (err) return next(err);
-            callback(null, server);
+        // Delete the thumbnail after using it
+        fs.unlink(
+          path.join(__dirname, `../temp/sm-${req.file.filename}`),
+          (err) => {
+            if (err) throw err;
           },
         );
-      },
+      }
 
-      /* 5. If the server already had an icon
-       * → Delete the previous file used as the server icon.
-       * Send back the new server object.
-       */
-      (server, callback) => {
-        if (server.icon) {
-          File.deleteOne({ _id: server.icon }).exec((err) => {
+      // Delete the image from the disk after using it
+      fs.unlink(path.join(__dirname, `../temp/${req.file.filename}`), (err) => {
+        if (err) throw err;
+      });
+
+      async.waterfall([
+      // 3. Save the image in a File document.
+        (callback) => {
+          const serverIcon = new File(icon);
+          serverIcon.save((err, saved) => {
             if (err) return next(err);
-            callback(null, server);
+            callback(null, saved.id);
           });
-        } else {
-          callback(null, server);
-        }
-      },
-    ], (err, server) => {
-      if (err) return next(err);
+        },
 
-      /**
-       * Use a redirect there because server contains the previous
-       * data (before update), so that the previous File document
-       * can be found with the _id and deleted.
-       */
-      return res.redirect(303, server.url);
-    });
+        // 4. Update the server icon with the new image
+        (iconId, callback) => {
+          server.icon = iconId;
+          Server.findByIdAndUpdate(
+            req.params.serverId,
+            server,
+            {},
+            (err, server) => {
+              if (err) return next(err);
+              callback(null, server);
+            },
+          );
+        },
+
+        /* 5. If the server already had an icon
+         * → Delete the previous file used as the server icon.
+         * Send back the new server object.
+         */
+        (server, callback) => {
+          if (server.icon) {
+            File.deleteOne({ _id: server.icon }).exec((err) => {
+              if (err) return next(err);
+              callback(null, server);
+            });
+          } else {
+            callback(null, server);
+          }
+        },
+      ], (err, server) => {
+        if (err) return next(err);
+
+        /**
+         * Use a redirect there because server contains the previous
+         * data (before update), so that the previous File document
+         * can be found with the _id and deleted.
+         */
+        return res.redirect(303, server.url);
+      });
+    }
   },
 ];
 
@@ -355,10 +355,10 @@ exports.server_remove_icon = (req, res, next) => {
   Server.findByIdAndUpdate(
     req.params.serverId,
     { $unset: { icon: '' } },
-    {},
+    { new: true },
     (err, server) => {
       if (err) return next(err);
-      return res.redirect(303, server.url);
+      return res.json(server);
     },
   );
 };
@@ -406,7 +406,7 @@ exports.server_delete = (req, res, next) => {
     ],
     (err) => {
       if (err) return next(err);
-      return res.redirect(303, '/servers');
+      return res.json({ success: 'Server deleted.' });
     },
   );
 };

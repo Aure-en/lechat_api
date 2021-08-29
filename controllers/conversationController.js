@@ -151,6 +151,7 @@ exports.conversation_create = [
 
     conversation.save((err, conversation) => {
       if (err) return next(err);
+      // Redirect to get the users populated.
       return res.redirect(303, conversation.url);
     });
   },

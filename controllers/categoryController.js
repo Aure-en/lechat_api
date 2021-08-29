@@ -41,9 +41,9 @@ exports.category_create = [
       timestamp: Date.now(),
     });
 
-    category.save((err) => {
+    category.save((err, category) => {
       if (err) return next(err);
-      return res.redirect(303, category.url);
+      return res.json(category);
     });
   },
 ];
@@ -64,12 +64,10 @@ exports.category_update = [
     Category.findByIdAndUpdate(
       req.params.categoryId,
       { name: req.body.name },
-      {},
+      { new: true },
       (err, category) => {
         if (err) return next(err);
-        // Use 303 status to redirect to GET.
-        // Otherwise, it infinitely makes PUT requests.
-        return res.redirect(303, category.url);
+        return res.json(category);
       },
     );
   },
@@ -93,9 +91,9 @@ exports.category_delete = (req, res, next) => {
       return res.json({ error: 'Categories containing channels cannot be deleted.' });
     }
     // If it has no channels, delete it.
-    Category.findByIdAndRemove(req.params.categoryId, (err, category) => {
+    Category.findByIdAndRemove(req.params.categoryId, (err) => {
       if (err) return next(err);
-      return res.redirect(303, `/servers/${category._id}/categories`);
+      return res.json({ success: 'Category deleted.' });
     });
   });
 };

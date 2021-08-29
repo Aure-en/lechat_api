@@ -121,7 +121,7 @@ describe('Update', () => {
         Authorization: `Bearer ${admin.token}`,
       })
       .field('name', 'Name')
-      .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
+      .attach('image', path.resolve(__dirname, '../assets/image.svg'))
       .redirects(1);
     expect(res.body.icon).toBeDefined();
     done();
@@ -175,10 +175,7 @@ describe('Delete', () => {
       .delete(`/servers/${server._id}`)
       .set({ Authorization: `Bearer ${admin.token}` })
       .redirects(1); // Send servers list.
-    // Server does not exist anymore.
-    expect(
-      res.body.filter((existing) => existing._id === server._id).length,
-    ).toBe(0);
+    expect(res.body.success).toBeDefined();
     done();
   });
 });

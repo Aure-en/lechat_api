@@ -76,14 +76,14 @@ beforeAll(async (done) => {
   const emoteRes1 = await request(app)
     .post('/emotes')
     .field('name', 'emote1')
-    .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
+    .attach('image', path.resolve(__dirname, '../assets/image.svg'))
     .redirects(1);
   emote1 = emoteRes1.body;
 
   const emoteRes2 = await request(app)
     .post('/emotes')
     .field('name', 'emote2')
-    .attach('image', path.resolve(__dirname, '../assets/emote.svg'))
+    .attach('image', path.resolve(__dirname, '../assets/image.svg'))
     .redirects(1);
   emote2 = emoteRes2.body;
   done();

@@ -91,9 +91,9 @@ exports.friend_add = [
       status: false,
     });
 
-    request.save((err) => {
+    request.save((err, request) => {
       if (err) return next(err);
-      res.redirect(303, `/users/${req.user._id.toString()}/pending`);
+      return res.json(request);
     });
   },
 ];
@@ -117,10 +117,10 @@ exports.friend_accept = [
     Friend.findByIdAndUpdate(
       req.params.friendId,
       { status: true },
-      {},
-      (err) => {
+      { new: true },
+      (err, friendship) => {
         if (err) return next(err);
-        res.redirect(303, `/users/${req.user._id.toString()}/friends`);
+        res.json(friendship);
       },
     );
   },
@@ -148,7 +148,7 @@ exports.friend_delete = [
   (req, res, next) => {
     Friend.findByIdAndRemove(req.params.friendId).exec((err) => {
       if (err) return next(err);
-      res.redirect(303, `/users/${req.user._id.toString()}/friends`);
+      res.json({ success: 'Friendship deleted.' });
     });
   },
 ];

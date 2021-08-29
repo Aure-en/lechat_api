@@ -80,8 +80,7 @@ describe('Creation', () => {
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
       })
-      .send({ name: 'Channel' })
-      .redirects(1);
+      .send({ name: 'Channel' });
     expect(res.body.name).toBe('Channel');
     done();
   });
@@ -179,9 +178,8 @@ describe('Delete', () => {
       .set({
         Authorization: `Bearer ${admin.token}`,
         'Content-Type': 'application/json',
-      })
-      .redirects(1);
-    expect(res.body.filter((existing) => existing._id === channel._id).length).toBe(0);
+      });
+    expect(res.body.success).toBeDefined();
     done();
   });
 });

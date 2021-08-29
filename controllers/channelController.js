@@ -90,9 +90,9 @@ exports.channel_create = [
       timestamp: Date.now(),
     });
 
-    channel.save((err) => {
+    channel.save((err, channel) => {
       if (err) return next(err);
-      return res.redirect(303, channel.url);
+      return res.json(channel);
     });
   },
 ];
@@ -117,12 +117,10 @@ exports.channel_update = [
     Channel.findByIdAndUpdate(
       req.params.channelId,
       { name: req.body.name, category: req.body.category, about: req.body.about },
-      {},
+      { new: true },
       (err, channel) => {
         if (err) return next(err);
-        // Use 303 status to redirect to GET.
-        // Otherwise, it infinitely makes PUT requests.
-        res.redirect(303, channel.url);
+        return res.json(channel);
       },
     );
   },
@@ -130,8 +128,8 @@ exports.channel_update = [
 
 // Delete a channel (DELETE)
 exports.channel_delete = (req, res, next) => {
-  Channel.findByIdAndRemove(req.params.channelId, (err, channel) => {
+  Channel.findByIdAndRemove(req.params.channelId, (err) => {
     if (err) return next(err);
-    return res.redirect(303, `/categories/${channel.category}/channels`);
+    return res.json({ success: 'Channel deleted.' });
   });
 };

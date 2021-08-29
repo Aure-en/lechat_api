@@ -51,11 +51,10 @@ describe('Sending a friend request', () => {
       .post(`/users/${recipient.user._id}/friends`)
       .set({
         Authorization: `Bearer ${sender.token}`,
-      })
-      .redirects(1);
-    expect(
-      res.body.filter((pending) => pending.sender._id === sender.user._id).length,
-    ).toBeGreaterThan(0);
+      });
+    expect(res.body.sender).toBe(sender.user._id);
+    expect(res.body.recipient).toBe(recipient.user._id);
+    expect(res.body.status).toBe(false);
     done();
   });
 
@@ -73,12 +72,8 @@ describe('Accepting a friend request', () => {
       .post(`/users/${recipient.user._id}/friends`)
       .set({
         Authorization: `Bearer ${sender.token}`,
-      })
-      .redirects(1);
-    [friendRequest] = res.body.filter(
-      (request) => request.sender._id === sender.user._id
-        && request.recipient._id === recipient.user._id,
-    );
+      });
+    friendRequest = res.body;
     done();
   });
 
@@ -97,11 +92,8 @@ describe('Accepting a friend request', () => {
       .put(`/friends/${friendRequest._id}`)
       .set({
         Authorization: `Bearer ${recipient.token}`,
-      })
-      .redirects(1);
-    expect(
-      res.body.filter((friend) => friend.sender._id === sender.user._id).length,
-    ).toBeGreaterThan(0);
+      });
+    expect(res.body.status).toBe(true);
     done();
   });
 
@@ -119,12 +111,8 @@ describe('Refusing or deleting a request', () => {
       .post(`/users/${recipient.user._id}/friends`)
       .set({
         Authorization: `Bearer ${sender.token}`,
-      })
-      .redirects(1);
-    [friendRequest] = res.body.filter(
-      (request) => request.sender._id === sender.user._id
-        && request.recipient._id === recipient.user._id,
-    );
+      });
+    friendRequest = res.body;
     done();
   });
 
@@ -143,14 +131,8 @@ describe('Refusing or deleting a request', () => {
       .delete(`/friends/${friendRequest._id}`)
       .set({
         Authorization: `Bearer ${recipient.token}`,
-      })
-      .redirects(1);
-    expect(
-      res.body.filter(
-        (friend) => friend.sender._id === sender.user._id
-          && friend.recipient._id === recipient.user._id,
-      ).length,
-    ).toBe(0);
+      });
+    expect(res.body.success).toBeDefined();
     done();
   });
 });
